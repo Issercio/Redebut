@@ -8,6 +8,8 @@
   <meta http-equiv="Expires" content="0" />
   <title>Un nouveau chapitre</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
   <style>
     body {
       margin: 0;
@@ -142,6 +144,13 @@
       margin-top: 10px;
       display: flex;
       justify-content: flex-end;
+    }
+
+    .compose-status {
+      margin-top: 8px;
+      min-height: 20px;
+      font-size: 13px;
+      color: #6b7280;
     }
 
     .auth-box {
@@ -428,6 +437,7 @@
         <div class="support-actions">
           <button id="publishMessage" type="button" class="support-btn" disabled>Publier le message</button>
         </div>
+        <div id="composeStatus" class="compose-status" aria-live="polite"></div>
         <div id="messagesList" class="messages-list" aria-live="polite"></div>
       </div>
 
@@ -450,7 +460,7 @@
     const canonicalBeforePath = window.location.protocol === 'file:' ? '/avant-compteur.html' : window.location.pathname;
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
-    const forcedCachePurgeVersion = 'v1';
+    const forcedCachePurgeVersion = 'v2';
     const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
     if (!window.localStorage.getItem(forcedCachePurgeKey)) {
       const keysToClear = [
@@ -469,6 +479,7 @@
     const countdownConfigUrl = './countdown-config.json';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
+    const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
@@ -486,9 +497,9 @@
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
 
-        if (countdownIntervalId) {
-          window.clearInterval(countdownIntervalId);
-          countdownIntervalId = null;
+        if (!window.__redirected) {
+          window.__redirected = true;
+          window.location.href = nextPageHref;
         }
         return;
       }
@@ -536,13 +547,36 @@
     const textArea = document.getElementById('customText');
     const textPreview = document.getElementById('textPreview');
     const publishMessageBtn = document.getElementById('publishMessage');
+    const composeStatus = document.getElementById('composeStatus');
     const messagesList = document.getElementById('messagesList');
-    const supportMessagesStorageKey = 'redebut-support-messages-v2';
+    const supportMessagesVersion = 'v3';
+    const supportMessagesStorageKey = `redebut-support-messages-${supportMessagesVersion}`;
+    const lastPublishStorageKey = 'redebut-last-publish-at-v1';
     const authStorageKey = 'redebut-auth-user-v2';
     const authBox = document.getElementById('authBox');
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
+    const supportMessagesChannel = 'BroadcastChannel' in window ? new BroadcastChannel('redebut-support-messages-sync') : null;
+    const runtimeSupabaseConfig = window.REDEBUT_SUPABASE_CONFIG || {};
+    const configuredCooldownSeconds = Number(runtimeSupabaseConfig.publishCooldownSeconds);
+    const configuredMaxMessages = Number(runtimeSupabaseConfig.maxMessages);
+    const publishCooldownMs = Number.isFinite(configuredCooldownSeconds) && configuredCooldownSeconds > 0
+      ? Math.round(configuredCooldownSeconds * 1000)
+      : 8000;
+    const maxMessages = Number.isFinite(configuredMaxMessages) && configuredMaxMessages > 0
+      ? Math.round(configuredMaxMessages)
+      : 100;
+    const supabaseConfig = {
+      // Optional realtime sync across devices.
+      // Fill these 2 values to enable shared live messages on phone + PC.
+      url: runtimeSupabaseConfig.url || '',
+      anonKey: runtimeSupabaseConfig.anonKey || '',
+      table: 'support_messages',
+      channel: 'redebut-support-messages-live-v1'
+    };
 
     let supportMessages = [];
+    let supabaseClient = null;
+    let isRealtimeEnabled = false;
     let authUser = null;
     let authStatus = null;
     let googleLogin = null;
@@ -636,11 +670,20 @@
       renderAuthBox();
       textArea.disabled = !connected;
       publishMessageBtn.disabled = !connected;
+      if (!connected) {
+        showComposeNotice('Connecte-toi pour publier un message.');
+      }
     }
 
     function showAuthNotice(message) {
       if (authStatus) {
         authStatus.textContent = message;
+      }
+    }
+
+    function showComposeNotice(message) {
+      if (composeStatus) {
+        composeStatus.textContent = message;
       }
     }
 
@@ -857,6 +900,88 @@
 
     function persistSupportMessages() {
       window.localStorage.setItem(supportMessagesStorageKey, JSON.stringify(supportMessages));
+
+      if (supportMessagesChannel) {
+        supportMessagesChannel.postMessage({
+          type: 'messages-updated',
+          messages: supportMessages
+        });
+      }
+    }
+
+    async function pullSupportMessagesFromSupabase() {
+      if (!isRealtimeEnabled || !supabaseClient) {
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from(supabaseConfig.table)
+        .select('name, provider, text, created_at')
+        .order('created_at', { ascending: true })
+        .limit(maxMessages);
+
+      if (error) {
+        throw error;
+      }
+
+      supportMessages = Array.isArray(data)
+        ? data.map((row) => ({
+            name: row.name || 'Compte',
+            provider: row.provider || 'Compte',
+            text: row.text || '',
+            createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
+          }))
+        : [];
+
+      persistSupportMessages();
+      renderSupportMessages();
+    }
+
+    async function setupRealtimeSupportMessages() {
+      const hasSupabase = Boolean(window.supabase && window.supabase.createClient);
+      const hasConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
+
+      if (!hasSupabase || !hasConfig) {
+        isRealtimeEnabled = false;
+        showComposeNotice('Mode local actif. Ajoute Supabase pour une synchro telephone + PC.');
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        isRealtimeEnabled = true;
+        showComposeNotice('Mode temps reel actif. Messages synchronises entre appareils.');
+
+        await pullSupportMessagesFromSupabase();
+
+        supabaseClient
+          .channel(supabaseConfig.channel)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: supabaseConfig.table },
+            async () => {
+              try {
+                await pullSupportMessagesFromSupabase();
+              } catch (e) {
+                // Keep current UI state if a live refresh fails.
+              }
+            }
+          )
+          .subscribe();
+      } catch (e) {
+        isRealtimeEnabled = false;
+        supabaseClient = null;
+        showComposeNotice('Mode local actif. La connexion temps reel a echoue.');
+      }
+    }
+
+    async function pruneSupabaseMessagesIfNeeded() {
+      if (!isRealtimeEnabled || !supabaseClient) {
+        return;
+      }
+
+      // Uses a DB function (SECURITY DEFINER) to prune safely without exposing broad delete rights to clients.
+      await supabaseClient.rpc('prune_support_messages', { max_rows: maxMessages });
     }
 
     function renderSupportMessages() {
@@ -891,15 +1016,57 @@
         });
     }
 
-    function publishSupportMessage() {
+    async function publishSupportMessage() {
       const messageText = textArea.value.trim();
       if (!isAuthenticated()) {
+        showComposeNotice('Connecte-toi pour publier un message.');
         return;
       }
 
       if (!messageText) {
+        showComposeNotice('Ecris un message avant de publier.');
         textArea.focus();
         return;
+      }
+
+      const now = Date.now();
+      const lastPublishAt = Number(window.localStorage.getItem(lastPublishStorageKey) || '0');
+      const remainingMs = publishCooldownMs - (now - lastPublishAt);
+      if (remainingMs > 0) {
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+        showComposeNotice(`Patiente encore ${remainingSeconds}s avant de republier.`);
+        return;
+      }
+
+      publishMessageBtn.disabled = true;
+      showComposeNotice('Publication en cours...');
+
+      if (isRealtimeEnabled && supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from(supabaseConfig.table)
+            .insert({
+              name: authUser.name,
+              provider: authUser.provider,
+              text: messageText
+            });
+
+          if (error) {
+            throw error;
+          }
+
+          window.localStorage.setItem(lastPublishStorageKey, String(now));
+          await pruneSupabaseMessagesIfNeeded();
+
+          textArea.value = '';
+          refreshText();
+          await pullSupportMessagesFromSupabase();
+          showComposeNotice('Message publie et synchronise.');
+          return;
+        } catch (e) {
+          // Fallback to local mode if realtime write fails.
+          showComposeNotice('Echec temps reel, bascule en mode local.');
+        }
       }
 
       supportMessages.push({
@@ -909,25 +1076,62 @@
         createdAt: Date.now()
       });
 
-      supportMessages = supportMessages.slice(-100);
+      supportMessages = supportMessages.slice(-maxMessages);
       persistSupportMessages();
+      window.localStorage.setItem(lastPublishStorageKey, String(now));
       textArea.value = '';
       refreshText();
       renderSupportMessages();
+      showComposeNotice('Message publie en mode local.');
+      publishMessageBtn.disabled = !isAuthenticated();
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key !== supportMessagesStorageKey) {
+        return;
+      }
+
+      try {
+        const nextMessages = event.newValue ? JSON.parse(event.newValue) : [];
+        supportMessages = Array.isArray(nextMessages) ? nextMessages : [];
+      } catch (e) {
+        supportMessages = [];
+      }
+
+      renderSupportMessages();
+    });
+
+    if (supportMessagesChannel) {
+      supportMessagesChannel.onmessage = (event) => {
+        const payload = event.data;
+        if (!payload || payload.type !== 'messages-updated') {
+          return;
+        }
+
+        supportMessages = Array.isArray(payload.messages) ? payload.messages : [];
+        renderSupportMessages();
+      };
     }
 
     textArea.addEventListener('input', refreshText);
-    publishMessageBtn.addEventListener('click', publishSupportMessage);
+    publishMessageBtn.addEventListener('click', () => {
+      publishSupportMessage().finally(() => {
+        publishMessageBtn.disabled = !isAuthenticated();
+      });
+    });
     textArea.addEventListener('keydown', (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault();
-        publishSupportMessage();
+        publishSupportMessage().finally(() => {
+          publishMessageBtn.disabled = !isAuthenticated();
+        });
       }
     });
 
     (async () => {
       await loadSharedCountdownConfig();
       await handleOAuthCallbackIfPresent();
+      await setupRealtimeSupportMessages();
       updateAuthUi();
       refreshText();
       renderSupportMessages();
