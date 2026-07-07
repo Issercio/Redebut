@@ -284,7 +284,7 @@
   <script>
     const countdownStorageKey = 'redebut-countdown-target-date';
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
-    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 60 * 1000);
 
     if (!storedTargetDate) {
       window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
