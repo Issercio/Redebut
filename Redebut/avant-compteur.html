@@ -545,6 +545,11 @@
 
     updateCountdown();
     countdownIntervalId = window.setInterval(updateCountdown, 1000);
+    window.setInterval(() => {
+      loadSharedCountdownConfig().catch(() => {
+        // Keep current countdown state if periodic config check fails.
+      });
+    }, 15000);
 
     async function loadSharedCountdownConfig() {
       let loadedFromRemoteConfig = false;
@@ -586,10 +591,11 @@
         const localStoredTargetMs = localStoredTarget ? new Date(localStoredTarget).getTime() : NaN;
         const hasLocalStoredTarget = Number.isFinite(localStoredTargetMs);
         const hasSameResetVersion = localStoredVersion === configResetVersion;
+        const hasDifferentTargetDate = !hasLocalStoredTarget || Math.abs(localStoredTargetMs - sharedTargetMs) > 1000;
 
         countdownResetVersion = configResetVersion;
 
-        if (hasSameResetVersion && hasLocalStoredTarget) {
+        if (hasSameResetVersion && hasLocalStoredTarget && !hasDifferentTargetDate) {
           targetDate = new Date(localStoredTargetMs);
         } else {
           targetDate = new Date(sharedTargetMs);
