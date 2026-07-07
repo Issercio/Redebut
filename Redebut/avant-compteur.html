@@ -724,9 +724,44 @@
     function getOAuthFlowState() {
       try {
         const rawFlow = window.localStorage.getItem(oauthFlowStateKey);
-        return rawFlow ? JSON.parse(rawFlow) : null;
+        if (rawFlow) {
+          return JSON.parse(rawFlow);
+        }
+
+        const rawSessionFlow = window.sessionStorage.getItem(oauthFlowStateKey);
+        return rawSessionFlow ? JSON.parse(rawSessionFlow) : null;
       } catch (e) {
         return null;
+      }
+    }
+
+    function setOAuthFlowState(flow) {
+      const serializedFlow = JSON.stringify(flow);
+
+      try {
+        window.localStorage.setItem(oauthFlowStateKey, serializedFlow);
+      } catch (e) {
+        // Fallback for restrictive browser storage modes.
+      }
+
+      try {
+        window.sessionStorage.setItem(oauthFlowStateKey, serializedFlow);
+      } catch (e) {
+        // Keep OAuth usable even if session storage is restricted.
+      }
+    }
+
+    function clearOAuthFlowState() {
+      try {
+        window.localStorage.removeItem(oauthFlowStateKey);
+      } catch (e) {
+        // Ignore storage cleanup errors.
+      }
+
+      try {
+        window.sessionStorage.removeItem(oauthFlowStateKey);
+      } catch (e) {
+        // Ignore storage cleanup errors.
       }
     }
 
@@ -906,7 +941,7 @@
       }
 
       const flow = getOAuthFlowState();
-      window.localStorage.removeItem(oauthFlowStateKey);
+      clearOAuthFlowState();
       clearOAuthPending();
 
       if (oauthError) {
@@ -1016,11 +1051,11 @@
 
       const state = createOauthState();
       setOAuthPending('google');
-      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
+      setOAuthFlowState({
         provider: 'google',
         state,
         returnPath: canonicalBeforePath
-      }));
+      });
       const url = `https://accounts.google.com/o/oauth2/v2/auth?${buildQuery({
         client_id: oauthConfig.googleClientId,
         redirect_uri: oauthConfig.googleRedirectUri,
@@ -1045,11 +1080,11 @@
 
       const state = createOauthState();
       setOAuthPending('twitch');
-      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
+      setOAuthFlowState({
         provider: 'twitch',
         state,
         returnPath: canonicalBeforePath
-      }));
+      });
       const url = `https://id.twitch.tv/oauth2/authorize?${buildQuery({
         client_id: oauthConfig.twitchClientId,
         redirect_uri: oauthConfig.twitchRedirectUri,
@@ -1058,7 +1093,12 @@
         state
       })}`;
       showAuthNotice('Connexion Twitch en cours...');
-      window.location.href = url;
+      window.location.assign(url);
+      window.setTimeout(() => {
+        if (window.location.href.indexOf('id.twitch.tv') === -1) {
+          window.location.replace(url);
+        }
+      }, 250);
     }
 
     async function handleOAuthCallbackIfPresent() {
