@@ -140,6 +140,64 @@
       justify-content: flex-end;
     }
 
+    .auth-box {
+      margin-top: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #ddd6fe;
+    }
+
+    .auth-status {
+      margin: 0 0 10px;
+      color: #4b5563;
+      font-size: 14px;
+    }
+
+    .auth-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .auth-help {
+      margin: 10px 0 0;
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+
+    .auth-help strong {
+      color: #312e81;
+    }
+
+    .auth-uri {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      word-break: break-all;
+      color: #4338ca;
+      font-family: monospace;
+    }
+
+    .auth-btn {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .auth-btn:hover {
+      background: #f9fafb;
+    }
+
     .support-btn {
       border: 0;
       border-radius: 999px;
@@ -325,13 +383,20 @@
 
     <div class="content-grid">
       <div class="panel">
-        <label for="supportName">Ton prénom (optionnel)</label>
-        <input id="supportName" type="text" placeholder="Ex: Camille" maxlength="40" />
+        <div class="auth-box">
+          <p id="authStatus" class="auth-status">Connecte-toi avec Google ou Twitch pour publier un message.</p>
+          <div class="auth-actions">
+            <button id="googleLogin" type="button" class="auth-btn">Connexion Google</button>
+            <button id="twitchLogin" type="button" class="auth-btn">Connexion Twitch</button>
+            <button id="logoutBtn" type="button" class="auth-btn">Se deconnecter</button>
+          </div>
+          <p id="oauthHelp" class="auth-help"></p>
+        </div>
         <label for="customText">Laisse un message de soutien et d'amour</label>
-        <textarea id="customText" placeholder="Écris ici ton message de soutien..."></textarea>
+        <textarea id="customText" placeholder="Ecris ici ton message de soutien..." disabled></textarea>
         <div id="textPreview" class="preview" aria-live="polite">Aperçu de ton message...</div>
         <div class="support-actions">
-          <button id="publishMessage" type="button" class="support-btn">Publier le message</button>
+          <button id="publishMessage" type="button" class="support-btn" disabled>Publier le message</button>
         </div>
         <div id="messagesList" class="messages-list" aria-live="polite"></div>
       </div>
@@ -346,16 +411,15 @@
             </video>
           </div>
         </div>
-        <!-- background change control removed (default sakura background) -->
       </div>
     </div>
 
   </div>
 
   <script>
-    const countdownStorageKey = 'redebut-countdown-target-date-v3';
+    const countdownStorageKey = 'redebut-countdown-target-date-v7';
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
-    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 60 * 1000);
+    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 60 * 60 * 1000);
 
     if (!storedTargetDate) {
       window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
@@ -396,12 +460,197 @@
 
     const textArea = document.getElementById('customText');
     const textPreview = document.getElementById('textPreview');
-    const supportNameInput = document.getElementById('supportName');
     const publishMessageBtn = document.getElementById('publishMessage');
     const messagesList = document.getElementById('messagesList');
-    const supportMessagesStorageKey = 'redebut-support-messages-v1';
+    const supportMessagesStorageKey = 'redebut-support-messages-v2';
+    const authStorageKey = 'redebut-auth-user-v1';
+    const authStatus = document.getElementById('authStatus');
+    const googleLogin = document.getElementById('googleLogin');
+    const twitchLogin = document.getElementById('twitchLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const oauthFlowStateKey = 'redebut-oauth-flow-v2';
+    const oauthHelp = document.getElementById('oauthHelp');
 
     let supportMessages = [];
+    let authUser = null;
+    const oauthConfig = {
+      googleClientId: '',
+      twitchClientId: '',
+      redirectUri: `${window.location.origin}${window.location.pathname}`
+    };
+
+    oauthHelp.innerHTML = `
+      <strong>Configuration requise :</strong> ajoute ton Client ID Google et ton Client ID Twitch dans le script.<br>
+      URL de redirection a mettre dans Google et Twitch :<br>
+      <span class="auth-uri">${oauthConfig.redirectUri}</span>
+    `;
+
+    try {
+      const storedUser = window.localStorage.getItem(authStorageKey);
+      authUser = storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      authUser = null;
+    }
+
+    function isAuthenticated() {
+      return Boolean(authUser && authUser.name && authUser.provider);
+    }
+
+    function setAuthUser(user) {
+      authUser = user;
+      if (user) {
+        window.localStorage.setItem(authStorageKey, JSON.stringify(user));
+      } else {
+        window.localStorage.removeItem(authStorageKey);
+      }
+      updateAuthUi();
+      refreshText();
+    }
+
+    function updateAuthUi() {
+      const connected = isAuthenticated();
+      textArea.disabled = !connected;
+      publishMessageBtn.disabled = !connected;
+      if (connected) {
+        authStatus.textContent = `Connecte(e) avec ${authUser.provider} : ${authUser.name}`;
+      } else {
+        authStatus.textContent = 'Connecte-toi avec Google ou Twitch pour publier un message.';
+      }
+    }
+
+    function createOauthState() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function buildQuery(params) {
+      return new URLSearchParams(params).toString();
+    }
+
+    function clearOAuthParamsFromUrl() {
+      const cleanUrl = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+
+    async function fetchGoogleProfile(accessToken) {
+      const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) throw new Error('google_profile_error');
+      const data = await response.json();
+      return {
+        provider: 'Google',
+        name: data.name || data.email || 'Utilisateur Google',
+        createdAt: Date.now()
+      };
+    }
+
+    async function fetchTwitchProfile(accessToken) {
+      const response = await fetch('https://api.twitch.tv/helix/users', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Client-Id': oauthConfig.twitchClientId
+        }
+      });
+      if (!response.ok) throw new Error('twitch_profile_error');
+      const data = await response.json();
+      const user = data.data && data.data[0] ? data.data[0] : null;
+      return {
+        provider: 'Twitch',
+        name: user && user.display_name ? user.display_name : 'Utilisateur Twitch',
+        createdAt: Date.now()
+      };
+    }
+
+    function startGoogleLogin() {
+      if (!oauthConfig.googleClientId) {
+        authStatus.textContent = 'Google non configure: ajoute googleClientId dans le script.';
+        return;
+      }
+
+      const state = createOauthState();
+      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({ provider: 'google', state }));
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?${buildQuery({
+        client_id: oauthConfig.googleClientId,
+        redirect_uri: oauthConfig.redirectUri,
+        response_type: 'token',
+        scope: 'openid profile email',
+        prompt: 'select_account',
+        state
+      })}`;
+      window.location.href = url;
+    }
+
+    function startTwitchLogin() {
+      if (!oauthConfig.twitchClientId) {
+        authStatus.textContent = 'Twitch non configure: ajoute twitchClientId dans le script.';
+        return;
+      }
+
+      const state = createOauthState();
+      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({ provider: 'twitch', state }));
+      const url = `https://id.twitch.tv/oauth2/authorize?${buildQuery({
+        client_id: oauthConfig.twitchClientId,
+        redirect_uri: oauthConfig.redirectUri,
+        response_type: 'token',
+        scope: 'user:read:email',
+        force_verify: 'true',
+        state
+      })}`;
+      window.location.href = url;
+    }
+
+    async function handleOAuthCallbackIfPresent() {
+      const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+      if (!hash) return;
+
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get('access_token');
+      const returnedState = hashParams.get('state');
+      const oauthError = hashParams.get('error');
+      if (!accessToken && !oauthError) return;
+
+      let flow = null;
+      try {
+        const rawFlow = window.localStorage.getItem(oauthFlowStateKey);
+        flow = rawFlow ? JSON.parse(rawFlow) : null;
+      } catch (e) {
+        flow = null;
+      }
+      window.localStorage.removeItem(oauthFlowStateKey);
+
+      if (oauthError) {
+        authStatus.textContent = 'Connexion annulee ou refusee.';
+        clearOAuthParamsFromUrl();
+        return;
+      }
+
+      if (!flow || flow.state !== returnedState) {
+        authStatus.textContent = 'Erreur de securite OAuth (state invalide).';
+        clearOAuthParamsFromUrl();
+        return;
+      }
+
+      try {
+        if (flow.provider === 'google') {
+          const user = await fetchGoogleProfile(accessToken);
+          setAuthUser(user);
+        } else if (flow.provider === 'twitch') {
+          const user = await fetchTwitchProfile(accessToken);
+          setAuthUser(user);
+        }
+      } catch (e) {
+        authStatus.textContent = 'Connexion impossible, verifie les IDs OAuth.';
+      } finally {
+        clearOAuthParamsFromUrl();
+      }
+    }
+
+    googleLogin.addEventListener('click', startGoogleLogin);
+    twitchLogin.addEventListener('click', startTwitchLogin);
+
+    logoutBtn.addEventListener('click', () => {
+      setAuthUser(null);
+    });
     try {
       const storedMessages = window.localStorage.getItem(supportMessagesStorageKey);
       supportMessages = storedMessages ? JSON.parse(storedMessages) : [];
@@ -414,13 +663,13 @@
 
     function refreshText() {
       const typedMessage = textArea.value.trim();
-      const typedName = supportNameInput.value.trim();
+      const displayName = isAuthenticated() ? authUser.name : 'Compte non connecte';
       if (!typedMessage) {
         textPreview.textContent = 'Aperçu de ton message...';
         return;
       }
 
-      textPreview.textContent = `${typedMessage}\n- ${typedName || 'Anonyme'}`;
+      textPreview.textContent = `${typedMessage}\n- ${displayName}`;
     }
 
     function persistSupportMessages() {
@@ -451,7 +700,7 @@
           const meta = document.createElement('p');
           meta.className = 'message-meta';
           const dateText = new Date(entry.createdAt).toLocaleString('fr-FR');
-          meta.textContent = `${entry.name || 'Anonyme'} - ${dateText}`;
+          meta.textContent = `${entry.name} (${entry.provider || 'Compte'}) - ${dateText}`;
 
           item.appendChild(text);
           item.appendChild(meta);
@@ -461,7 +710,9 @@
 
     function publishSupportMessage() {
       const messageText = textArea.value.trim();
-      const senderName = supportNameInput.value.trim() || 'Anonyme';
+      if (!isAuthenticated()) {
+        return;
+      }
 
       if (!messageText) {
         textArea.focus();
@@ -469,7 +720,8 @@
       }
 
       supportMessages.push({
-        name: senderName,
+        name: authUser.name,
+        provider: authUser.provider,
         text: messageText,
         createdAt: Date.now()
       });
@@ -482,7 +734,6 @@
     }
 
     textArea.addEventListener('input', refreshText);
-    supportNameInput.addEventListener('input', refreshText);
     publishMessageBtn.addEventListener('click', publishSupportMessage);
     textArea.addEventListener('keydown', (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -491,12 +742,13 @@
       }
     });
 
-    refreshText();
-    renderSupportMessages();
+    (async () => {
+      await handleOAuthCallbackIfPresent();
+      updateAuthUi();
+      refreshText();
+      renderSupportMessages();
+    })();
 
-    // video section is rendered directly with the local video file
-
-    // default background is handled by CSS with side panels only
     const bgImg = document.getElementById('bgImg');
     bgImg.style.backgroundImage = 'none';
 
