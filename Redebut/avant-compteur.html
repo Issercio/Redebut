@@ -1117,13 +1117,11 @@
         state
       })}`;
       showAuthNotice('Connexion Twitch en cours...');
-      window.location.assign(url);
-      window.open(url, '_self');
-      window.setTimeout(() => {
-        if (window.location.href.indexOf('id.twitch.tv') === -1) {
-          window.location.replace(url);
-        }
-      }, 250);
+      try {
+        window.location.href = url;
+      } catch (e) {
+        window.location.assign(url);
+      }
     }
 
     async function handleOAuthCallbackIfPresent() {
