@@ -484,31 +484,35 @@
     const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
-    const countdownRemainingStorageKey = 'redebut-countdown-remaining-ms-shared';
     const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
-    const storedRemainingRaw = window.localStorage.getItem(countdownRemainingStorageKey);
-    const storedRemainingMs = Number(storedRemainingRaw);
-    let remainingMs = Number.isFinite(storedRemainingMs) && storedRemainingMs >= 0
-      ? storedRemainingMs
-      : countdownDurationMs;
+    let serverTimeOffsetMs = 0;
+    const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
+    const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
+    const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs) && parsedStoredTargetMs > Date.now();
+    let targetDate = hasUsableStoredTarget ? new Date(parsedStoredTargetMs) : new Date(Date.now() + countdownDurationMs);
     let canAutoRedirect = false;
 
     let countdownIntervalId = null;
 
-    function renderCountdownFromRemaining() {
-      if (remainingMs <= 0) {
+    function updateCountdown() {
+      const now = Date.now() + serverTimeOffsetMs;
+      const distance = targetDate.getTime() - now;
+
+      if (distance <= 0) {
         if (isOAuthPending()) {
-          remainingMs = countdownDurationMs;
-          window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
+          const safeTargetDate = new Date(Date.now() + countdownDurationMs);
+          targetDate = safeTargetDate;
+          window.localStorage.setItem(countdownStorageKey, safeTargetDate.toISOString());
         }
 
-        if (remainingMs > 0) {
-          const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+        const recoveredDistance = targetDate.getTime() - now;
+        if (recoveredDistance > 0) {
+          const days = Math.floor(recoveredDistance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((recoveredDistance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((recoveredDistance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((recoveredDistance % (1000 * 60)) / 1000);
 
           document.getElementById('days').textContent = String(days).padStart(2, '0');
           document.getElementById('hours').textContent = String(hours).padStart(2, '0');
@@ -529,10 +533,10 @@
         return;
       }
 
-      const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
       document.getElementById('days').textContent = String(days).padStart(2, '0');
       document.getElementById('hours').textContent = String(hours).padStart(2, '0');
@@ -540,17 +544,8 @@
       document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
     }
 
-    function tickCountdown() {
-      if (remainingMs > 0) {
-        remainingMs = Math.max(0, remainingMs - 1000);
-        window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
-      }
-
-      renderCountdownFromRemaining();
-    }
-
-    renderCountdownFromRemaining();
-    countdownIntervalId = window.setInterval(tickCountdown, 1000);
+    updateCountdown();
+    countdownIntervalId = window.setInterval(updateCountdown, 1000);
     window.setInterval(() => {
       loadSharedCountdownConfig().catch(() => {
         // Keep current countdown state if periodic config check fails.
@@ -567,6 +562,12 @@
             const response = await fetch(`${configUrl}?t=${Date.now()}`, { cache: 'no-store' });
             if (!response.ok) {
               continue;
+            }
+
+            const serverDateHeader = response.headers.get('date');
+            const serverNowMs = serverDateHeader ? new Date(serverDateHeader).getTime() : NaN;
+            if (Number.isFinite(serverNowMs)) {
+              serverTimeOffsetMs = serverNowMs - Date.now();
             }
 
             const candidate = await response.json();
@@ -604,14 +605,11 @@
           const cacheKeysToClear = [
             supportMessagesStorageKey,
             messagesRoundStartStorageKey,
-            countdownRemainingStorageKey,
             countdownStorageKey,
             countdownVersionStorageKey
           ];
           cacheKeysToClear.forEach((key) => window.localStorage.removeItem(key));
 
-          remainingMs = countdownDurationMs;
-          window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
           window.localStorage.setItem(countdownStorageKey, config.targetDate);
           window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
 
@@ -621,22 +619,24 @@
         }
 
         window.__redirected = false;
-        renderCountdownFromRemaining();
+        targetDate = new Date(config.targetDate);
+        updateCountdown();
       } catch (e) {
         // keep the last known local target date if the shared file is unavailable
       } finally {
-        // Self-heal missing local state if config cannot be reached in production.
+        // Self-heal expired local target if config cannot be reached in production.
         if (!loadedFromRemoteConfig) {
-          const localRemainingRaw = window.localStorage.getItem(countdownRemainingStorageKey);
-          const localRemainingMs = Number(localRemainingRaw);
-          const isLocalMissing = !Number.isFinite(localRemainingMs) || localRemainingMs < 0;
+          const localTargetRaw = window.localStorage.getItem(countdownStorageKey);
+          const localTargetMs = localTargetRaw ? new Date(localTargetRaw).getTime() : NaN;
+          const isLocalMissingOrExpired = !Number.isFinite(localTargetMs) || localTargetMs <= Date.now();
 
-          if (isLocalMissing) {
-            remainingMs = countdownDurationMs;
-            window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
+          if (isLocalMissingOrExpired) {
+            const fallbackTargetDate = new Date(Date.now() + countdownDurationMs);
+            targetDate = fallbackTargetDate;
+            window.localStorage.setItem(countdownStorageKey, fallbackTargetDate.toISOString());
             window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
             window.__redirected = false;
-            renderCountdownFromRemaining();
+            updateCountdown();
           }
         }
       }
@@ -1072,7 +1072,7 @@
         clearOAuthParamsFromUrl();
       }
 
-      renderCountdownFromRemaining();
+      updateCountdown();
     }
 
     supportMessages = [];
@@ -1460,7 +1460,7 @@
       }
 
       canAutoRedirect = true;
-      renderCountdownFromRemaining();
+      updateCountdown();
 
       try {
         await handleOAuthCallbackIfPresent();
