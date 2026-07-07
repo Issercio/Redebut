@@ -15,7 +15,8 @@
         const rawFlow = window.localStorage.getItem('redebut-oauth-flow-v2');
         const flow = rawFlow ? JSON.parse(rawFlow) : null;
         const returnPath = flow && flow.returnPath ? flow.returnPath : '../avant-compteur.html';
-        const destination = `${window.location.origin}${returnPath}#${hash}`;
+        const destinationUrl = new URL(returnPath, window.location.origin);
+        const destination = `${destinationUrl.origin}${destinationUrl.pathname}#${hash}`;
         window.location.replace(destination);
       } catch (e) {
         const fallbackPath = new URL('../avant-compteur.html', window.location.href);

@@ -173,10 +173,33 @@
       padding: 8px 12px;
       font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .auth-btn:hover {
       background: #f9fafb;
+    }
+
+    .auth-btn-google {
+      border-color: #d6e2ff;
+      background: #f8fbff;
+    }
+
+    .auth-btn-twitch {
+      border-color: #d6c8ff;
+      background: #faf7ff;
+    }
+
+    .auth-logo {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      border-radius: 4px;
+      flex: 0 0 auto;
+      object-fit: contain;
+      background: #fff;
     }
 
     .support-btn {
@@ -403,7 +426,7 @@
   </div>
 
   <script>
-    const canonicalBeforePath = '/avant-compteur.html';
+    const canonicalBeforePath = window.location.protocol === 'file:' ? '/avant-compteur.html' : window.location.pathname;
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
     const forcedCachePurgeVersion = 'v1';
@@ -519,9 +542,8 @@
 
     function ensureValidAuthOrigin() {
       const isFileOrigin = window.location.protocol === 'file:';
-      const isWrongWebOrigin = !isFileOrigin && window.location.origin !== productionOrigin;
 
-      if (!isFileOrigin && !isWrongWebOrigin) {
+      if (!isFileOrigin) {
         return true;
       }
 
@@ -573,8 +595,8 @@
         authBox.innerHTML = `
           <p id="authStatus" class="auth-status" aria-live="polite"></p>
           <div class="auth-actions">
-            <button id="googleLogin" type="button" class="auth-btn">Connexion Google</button>
-            <button id="twitchLogin" type="button" class="auth-btn">Connexion Twitch</button>
+            <button id="googleLogin" type="button" class="auth-btn auth-btn-google"><img class="auth-logo" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" aria-hidden="true" />Connexion Google</button>
+            <button id="twitchLogin" type="button" class="auth-btn auth-btn-twitch"><img class="auth-logo" src="https://www.twitch.tv/favicon.ico" alt="" aria-hidden="true" />Connexion Twitch</button>
           </div>
         `;
       }
@@ -675,8 +697,7 @@
       const data = await response.json();
       return {
         provider: 'Google',
-        name: data.name || data.email || 'Utilisateur Google',
-        createdAt: Date.now()
+        name: data.name || data.email || 'Utilisateur Google'
       };
     }
 
@@ -692,8 +713,7 @@
       const user = data.data && data.data[0] ? data.data[0] : null;
       return {
         provider: 'Twitch',
-        name: user && user.display_name ? user.display_name : 'Utilisateur Twitch',
-        createdAt: Date.now()
+        name: user && user.display_name ? user.display_name : 'Utilisateur Twitch'
       };
     }
 
