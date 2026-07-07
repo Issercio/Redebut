@@ -486,7 +486,7 @@
     const canonicalBeforePath = window.location.protocol === 'file:' ? '/avant-compteur.html' : window.location.pathname;
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
-    const forcedCachePurgeVersion = 'v3';
+    const forcedCachePurgeVersion = 'v4';
     const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
     const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
     const initialSearch = new URLSearchParams(window.location.search);
@@ -740,6 +740,58 @@
       googleRedirectUri: `${productionOrigin}${canonicalBeforePath}`,
       twitchRedirectUri: `${productionOrigin}${canonicalBeforePath}`
     };
+    const defaultFaviconHref = './Apres%20compteur/assets/Kitsune_Favicon.jpg';
+    const providerFaviconMap = {
+      google: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+      twitch: 'https://www.twitch.tv/favicon.ico'
+    };
+
+    function normalizeProvider(providerRaw) {
+      return String(providerRaw || '').trim().toLowerCase();
+    }
+
+    function setPageFavicon(href) {
+      const targetHref = href || defaultFaviconHref;
+      let favicon = document.querySelector("link[rel='icon']");
+
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+
+      favicon.href = targetHref;
+    }
+
+    function getPendingProvider() {
+      try {
+        const rawPending = window.localStorage.getItem(oauthPendingStorageKey) || window.sessionStorage.getItem(oauthPendingStorageKey);
+        if (!rawPending) {
+          return '';
+        }
+
+        const parsed = JSON.parse(rawPending);
+        return normalizeProvider(parsed && parsed.provider);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function syncFaviconWithAuthState() {
+      const pendingProvider = getPendingProvider();
+      if (pendingProvider && providerFaviconMap[pendingProvider]) {
+        setPageFavicon(providerFaviconMap[pendingProvider]);
+        return;
+      }
+
+      const authProvider = normalizeProvider(authUser && authUser.provider);
+      if (authProvider && providerFaviconMap[authProvider]) {
+        setPageFavicon(providerFaviconMap[authProvider]);
+        return;
+      }
+
+      setPageFavicon(defaultFaviconHref);
+    }
 
     function ensureValidAuthOrigin() {
       const isFileOrigin = window.location.protocol === 'file:';
@@ -815,6 +867,8 @@
       } catch (e) {
         // Keep OAuth flow usable if session storage is restricted.
       }
+
+      syncFaviconWithAuthState();
     }
 
     function clearOAuthPending() {
@@ -829,6 +883,8 @@
       } catch (e) {
         // Ignore storage cleanup errors.
       }
+
+      syncFaviconWithAuthState();
     }
 
     function isOAuthPending() {
@@ -868,6 +924,8 @@
       window.localStorage.removeItem(authStorageKey);
     }
 
+    syncFaviconWithAuthState();
+
     function isAuthenticated() {
       return Boolean(authUser && authUser.name && authUser.provider);
     }
@@ -879,6 +937,7 @@
       } else {
         window.localStorage.removeItem(authStorageKey);
       }
+      syncFaviconWithAuthState();
       updateAuthUi();
       refreshText();
     }
