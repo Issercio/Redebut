@@ -486,7 +486,7 @@
     const canonicalBeforePath = window.location.protocol === 'file:' ? '/avant-compteur.html' : window.location.pathname;
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
-    const forcedCachePurgeVersion = 'v2';
+    const forcedCachePurgeVersion = 'v3';
     const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
     const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
     const initialSearch = new URLSearchParams(window.location.search);
@@ -500,8 +500,11 @@
       const keysToClear = [
         'redebut-countdown-target-date-shared',
         'redebut-countdown-reset-version-shared',
+        'redebut-countdown-duration-ms-shared',
+        'redebut-messages-round-start-ms-v1',
         'redebut-auth-user-v2',
-        'redebut-support-messages-v2'
+        'redebut-support-messages-v2',
+        'redebut-support-messages-v3'
       ];
 
       if (!hasOAuthCallbackOnLoad) {
