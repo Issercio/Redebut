@@ -644,8 +644,6 @@
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
     const supportMessagesChannel = 'BroadcastChannel' in window ? new BroadcastChannel('redebut-support-messages-sync') : null;
     const runtimeSupabaseConfig = window.REDEBUT_SUPABASE_CONFIG || {};
-    const fallbackSupabaseUrl = 'https://vevwapwxbifospnmfhx.supabase.co';
-    const fallbackSupabaseAnonKey = 'sb_publishable_Kow-mehYMg4nY0mR_LgklA_EjU8JZAP';
     const configuredCooldownSeconds = Number(runtimeSupabaseConfig.publishCooldownSeconds);
     const configuredMaxMessages = Number(runtimeSupabaseConfig.maxMessages);
     const configuredSyncPollSeconds = Number(runtimeSupabaseConfig.syncPollSeconds);
@@ -661,8 +659,8 @@
     const supabaseConfig = {
       // Optional realtime sync across devices.
       // Fill these 2 values to enable shared live messages on phone + PC.
-      url: runtimeSupabaseConfig.url || fallbackSupabaseUrl,
-      anonKey: runtimeSupabaseConfig.anonKey || fallbackSupabaseAnonKey,
+      url: runtimeSupabaseConfig.url || '',
+      anonKey: runtimeSupabaseConfig.anonKey || '',
       table: 'support_messages',
       channel: 'redebut-support-messages-live-v1'
     };
@@ -866,6 +864,24 @@
       }
 
       return response.json();
+    }
+
+    async function preflightSupabaseCloud() {
+      if (!supabaseConfig.url || !supabaseConfig.anonKey) {
+        return false;
+      }
+
+      try {
+        await fetch(`${supabaseConfig.url}/auth/v1/health`, { method: 'GET' });
+        return true;
+      } catch (e) {
+        cloudHardFailure = true;
+        isCloudSyncEnabled = false;
+        isRealtimeEnabled = false;
+        supabaseClient = null;
+        showComposeNotice('Cloud indisponible: URL Supabase introuvable.');
+        return false;
+      }
     }
 
     function createOauthState() {
@@ -1158,6 +1174,11 @@
         isRealtimeEnabled = false;
         isCloudSyncEnabled = false;
         showComposeNotice('Cloud non configure. Messages en mode local.');
+        return;
+      }
+
+      const cloudReachable = await preflightSupabaseCloud();
+      if (!cloudReachable) {
         return;
       }
 

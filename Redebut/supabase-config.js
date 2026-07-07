@@ -1,6 +1,6 @@
 window.REDEBUT_SUPABASE_CONFIG = {
   // Example: 'https://your-project-ref.supabase.co'
-  url: 'https://vevwapwxbifospnmfhx.supabase.co',
+  url: 'https://vevwapwxbiffospnmfhx.supabase.co',
   // Example: 'eyJ...'
   anonKey: 'sb_publishable_Kow-mehYMg4nY0mR_LgklA_EjU8JZAP',
   // Anti-spam cooldown in seconds.
