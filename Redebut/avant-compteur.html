@@ -484,34 +484,31 @@
     const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
+    const countdownRemainingStorageKey = 'redebut-countdown-remaining-ms-shared';
     const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
-    const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
-    const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
-    const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs);
-    let targetDate = hasUsableStoredTarget ? new Date(parsedStoredTargetMs) : new Date(Date.now() + countdownDurationMs);
+    const storedRemainingRaw = window.localStorage.getItem(countdownRemainingStorageKey);
+    const storedRemainingMs = Number(storedRemainingRaw);
+    let remainingMs = Number.isFinite(storedRemainingMs) && storedRemainingMs >= 0
+      ? storedRemainingMs
+      : countdownDurationMs;
     let canAutoRedirect = false;
 
     let countdownIntervalId = null;
 
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance <= 0) {
+    function renderCountdownFromRemaining() {
+      if (remainingMs <= 0) {
         if (isOAuthPending()) {
-          const safeTargetDate = new Date(Date.now() + countdownDurationMs);
-          targetDate = safeTargetDate;
-          window.localStorage.setItem(countdownStorageKey, safeTargetDate.toISOString());
+          remainingMs = countdownDurationMs;
+          window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
         }
 
-        const recoveredDistance = targetDate - now;
-        if (recoveredDistance > 0) {
-          const days = Math.floor(recoveredDistance / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((recoveredDistance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((recoveredDistance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((recoveredDistance % (1000 * 60)) / 1000);
+        if (remainingMs > 0) {
+          const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
 
           document.getElementById('days').textContent = String(days).padStart(2, '0');
           document.getElementById('hours').textContent = String(hours).padStart(2, '0');
@@ -532,10 +529,10 @@
         return;
       }
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
 
       document.getElementById('days').textContent = String(days).padStart(2, '0');
       document.getElementById('hours').textContent = String(hours).padStart(2, '0');
@@ -543,8 +540,17 @@
       document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
     }
 
-    updateCountdown();
-    countdownIntervalId = window.setInterval(updateCountdown, 1000);
+    function tickCountdown() {
+      if (remainingMs > 0) {
+        remainingMs = Math.max(0, remainingMs - 1000);
+        window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
+      }
+
+      renderCountdownFromRemaining();
+    }
+
+    renderCountdownFromRemaining();
+    countdownIntervalId = window.setInterval(tickCountdown, 1000);
     window.setInterval(() => {
       loadSharedCountdownConfig().catch(() => {
         // Keep current countdown state if periodic config check fails.
@@ -583,45 +589,42 @@
         countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
         const sharedTargetDate = new Date(config.targetDate);
         const sharedTargetMs = sharedTargetDate.getTime();
-        if (!Number.isFinite(sharedTargetMs)) {
-          return;
-        }
-
-        const nextRoundStartMs = sharedTargetMs - countdownDurationMs;
-        if (Number.isFinite(nextRoundStartMs) && nextRoundStartMs > 0) {
+        const computedRoundStartMs = Number.isFinite(sharedTargetMs) ? (sharedTargetMs - countdownDurationMs) : NaN;
+        if (Number.isFinite(computedRoundStartMs) && computedRoundStartMs > 0) {
+          const nextRoundStartMs = computedRoundStartMs;
           messagesRoundStartMs = nextRoundStartMs;
           window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
         }
 
         countdownResetVersion = configResetVersion;
-        targetDate = new Date(sharedTargetMs);
-        window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
+        window.localStorage.setItem(countdownStorageKey, config.targetDate);
         window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
 
         if (previousResetVersion && previousResetVersion !== configResetVersion) {
+          remainingMs = countdownDurationMs;
+          window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
           supportMessages = [];
           window.localStorage.removeItem(supportMessagesStorageKey);
           renderSupportMessages();
         }
 
         window.__redirected = false;
-        updateCountdown();
+        renderCountdownFromRemaining();
       } catch (e) {
         // keep the last known local target date if the shared file is unavailable
       } finally {
-        // Self-heal expired local state if config cannot be reached in production.
+        // Self-heal missing local state if config cannot be reached in production.
         if (!loadedFromRemoteConfig) {
-          const localTargetRaw = window.localStorage.getItem(countdownStorageKey);
-          const localTargetMs = localTargetRaw ? new Date(localTargetRaw).getTime() : NaN;
-          const isLocalMissingOrExpired = !Number.isFinite(localTargetMs) || localTargetMs <= Date.now();
+          const localRemainingRaw = window.localStorage.getItem(countdownRemainingStorageKey);
+          const localRemainingMs = Number(localRemainingRaw);
+          const isLocalMissing = !Number.isFinite(localRemainingMs) || localRemainingMs < 0;
 
-          if (isLocalMissingOrExpired) {
-            const fallbackTargetDate = new Date(Date.now() + countdownDurationMs);
-            targetDate = fallbackTargetDate;
-            window.localStorage.setItem(countdownStorageKey, fallbackTargetDate.toISOString());
+          if (isLocalMissing) {
+            remainingMs = countdownDurationMs;
+            window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
             window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
             window.__redirected = false;
-            updateCountdown();
+            renderCountdownFromRemaining();
           }
         }
       }
@@ -1046,19 +1049,10 @@
         clearOAuthParamsFromUrl();
       }
 
-      updateCountdown();
+      renderCountdownFromRemaining();
     }
 
-    try {
-      const storedMessages = window.localStorage.getItem(supportMessagesStorageKey);
-      supportMessages = storedMessages ? JSON.parse(storedMessages) : [];
-      if (!Array.isArray(supportMessages)) {
-        supportMessages = [];
-      }
-      supportMessages = filterMessagesForCurrentRound(supportMessages);
-    } catch (e) {
-      supportMessages = [];
-    }
+    supportMessages = [];
 
     function refreshText() {
       const typedMessage = textArea.value.trim();
@@ -1142,7 +1136,7 @@
       if (!hasConfig) {
         isRealtimeEnabled = false;
         isCloudSyncEnabled = false;
-        showComposeNotice('Mode local actif. Ajoute Supabase pour une synchro telephone + PC.');
+        showComposeNotice('Cloud non configure. Active Supabase pour publier des messages.');
         return;
       }
 
@@ -1351,25 +1345,12 @@
           showComposeNotice('Message publie et synchronise.');
           return;
         } catch (e) {
-          // Keep UX functional even when cloud publish is unavailable.
-          showComposeNotice('Cloud indisponible, message publie en local.');
+          showComposeNotice('Cloud indisponible. Message non publie, reessaie dans quelques secondes.');
+          return;
         }
       }
 
-      supportMessages.push({
-        name: authUser.name,
-        provider: authUser.provider,
-        text: messageText,
-        createdAt: Date.now()
-      });
-
-      supportMessages = supportMessages.slice(-maxMessages);
-      persistSupportMessages();
-      window.localStorage.setItem(lastPublishStorageKey, String(now));
-      textArea.value = '';
-      refreshText();
-      renderSupportMessages();
-      showComposeNotice('Message publie en mode local.');
+      showComposeNotice('Publication impossible: cloud indisponible.');
       publishMessageBtn.disabled = !isAuthenticated();
     }
 
@@ -1439,7 +1420,7 @@
       try {
         await setupRealtimeSupportMessages();
       } catch (e) {
-        showComposeNotice('Mode local actif. La synchro temps reel est indisponible.');
+        showComposeNotice('Cloud indisponible. La synchro des messages est indisponible.');
       }
 
       updateAuthUi();
