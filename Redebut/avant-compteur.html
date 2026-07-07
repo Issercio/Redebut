@@ -282,8 +282,13 @@
   </div>
 
   <script>
-    const targetDate = new Date();
-    targetDate.setTime(targetDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const countdownStorageKey = 'redebut-countdown-target-date';
+    const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
+    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    if (!storedTargetDate) {
+      window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
+    }
 
     const nextLink = document.getElementById('nextLink');
 
