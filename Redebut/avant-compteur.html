@@ -1302,6 +1302,8 @@
 
       if (isCloudSyncEnabled) {
         try {
+          let publishedInCloud = false;
+
           if (supabaseClient) {
             const { error } = await supabaseClient
               .from(supabaseConfig.table)
@@ -1311,10 +1313,12 @@
                 text: messageText
               });
 
-            if (error) {
-              throw error;
+            if (!error) {
+              publishedInCloud = true;
             }
-          } else {
+          }
+
+          if (!publishedInCloud) {
             await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}`, {
               method: 'POST',
               headers: {
@@ -1326,6 +1330,12 @@
                 text: messageText
               })
             });
+
+            publishedInCloud = true;
+          }
+
+          if (!publishedInCloud) {
+            throw new Error('cloud_publish_failed');
           }
 
           window.localStorage.setItem(lastPublishStorageKey, String(now));
@@ -1341,9 +1351,8 @@
           showComposeNotice('Message publie et synchronise.');
           return;
         } catch (e) {
-          // In cloud mode, never write locally to avoid PC/mobile divergence.
-          showComposeNotice('Echec cloud. Message non publie, reessaie dans quelques secondes.');
-          return;
+          // Keep UX functional even when cloud publish is unavailable.
+          showComposeNotice('Cloud indisponible, message publie en local.');
         }
       }
 
