@@ -487,7 +487,6 @@
     const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
-    const storedCountdownVersion = window.localStorage.getItem(countdownVersionStorageKey);
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
     const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
     const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs);
@@ -550,7 +549,7 @@
       loadSharedCountdownConfig().catch(() => {
         // Keep current countdown state if periodic config check fails.
       });
-    }, 15000);
+    }, 5000);
 
     async function loadSharedCountdownConfig() {
       let loadedFromRemoteConfig = false;
@@ -587,22 +586,10 @@
           return;
         }
 
-        const localStoredVersion = window.localStorage.getItem(countdownVersionStorageKey) || storedCountdownVersion;
-        const localStoredTarget = window.localStorage.getItem(countdownStorageKey);
-        const localStoredTargetMs = localStoredTarget ? new Date(localStoredTarget).getTime() : NaN;
-        const hasLocalStoredTarget = Number.isFinite(localStoredTargetMs);
-        const hasSameResetVersion = localStoredVersion === configResetVersion;
-        const hasDifferentTargetDate = !hasLocalStoredTarget || Math.abs(localStoredTargetMs - sharedTargetMs) > 1000;
-
         countdownResetVersion = configResetVersion;
-
-        if (hasSameResetVersion && hasLocalStoredTarget && !hasDifferentTargetDate) {
-          targetDate = new Date(localStoredTargetMs);
-        } else {
-          targetDate = new Date(sharedTargetMs);
-          window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
-          window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
-        }
+        targetDate = new Date(sharedTargetMs);
+        window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
+        window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
 
         window.__redirected = false;
         updateCountdown();
@@ -640,6 +627,8 @@
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
     const supportMessagesChannel = 'BroadcastChannel' in window ? new BroadcastChannel('redebut-support-messages-sync') : null;
     const runtimeSupabaseConfig = window.REDEBUT_SUPABASE_CONFIG || {};
+    const fallbackSupabaseUrl = 'https://vevwapwxbifospnmfhx.supabase.co';
+    const fallbackSupabaseAnonKey = 'sb_publishable_Kow-mehYMg4nY0mR_LgklA_EjU8JZAP';
     const configuredCooldownSeconds = Number(runtimeSupabaseConfig.publishCooldownSeconds);
     const configuredMaxMessages = Number(runtimeSupabaseConfig.maxMessages);
     const configuredSyncPollSeconds = Number(runtimeSupabaseConfig.syncPollSeconds);
@@ -655,8 +644,8 @@
     const supabaseConfig = {
       // Optional realtime sync across devices.
       // Fill these 2 values to enable shared live messages on phone + PC.
-      url: runtimeSupabaseConfig.url || '',
-      anonKey: runtimeSupabaseConfig.anonKey || '',
+      url: runtimeSupabaseConfig.url || fallbackSupabaseUrl,
+      anonKey: runtimeSupabaseConfig.anonKey || fallbackSupabaseAnonKey,
       table: 'support_messages',
       channel: 'redebut-support-messages-live-v1'
     };
@@ -664,6 +653,7 @@
     let supportMessages = [];
     let supabaseClient = null;
     let isRealtimeEnabled = false;
+    let isCloudSyncEnabled = false;
     let messagesSyncIntervalId = null;
     let authUser = null;
     let authStatus = null;
@@ -810,8 +800,35 @@
 
     function showComposeNotice(message) {
       if (composeStatus) {
-        composeStatus.textContent = message;
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        const isSupabaseMention = /supabase|temps reel|mode local actif|synchro telephone \+ pc/i.test(message || '');
+        composeStatus.textContent = isMobile && isSupabaseMention ? '' : message;
       }
+    }
+
+    async function supabaseRestRequest(path, options = {}) {
+      const headers = {
+        apikey: supabaseConfig.anonKey,
+        Authorization: `Bearer ${supabaseConfig.anonKey}`,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+
+      const response = await fetch(`${supabaseConfig.url}${path}`, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body
+      });
+
+      if (!response.ok) {
+        throw new Error(`supabase_rest_error_${response.status}`);
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
     }
 
     function createOauthState() {
@@ -1046,28 +1063,36 @@
     }
 
     async function pullSupportMessagesFromSupabase() {
-      if (!isRealtimeEnabled || !supabaseClient) {
+      if (!isCloudSyncEnabled) {
         return;
       }
 
-      const { data, error } = await supabaseClient
-        .from(supabaseConfig.table)
-        .select('name, provider, text, created_at')
-        .order('created_at', { ascending: true })
-        .limit(maxMessages);
+      let rows = [];
 
-      if (error) {
-        throw error;
+      if (supabaseClient) {
+        const { data, error } = await supabaseClient
+          .from(supabaseConfig.table)
+          .select('name, provider, text, created_at')
+          .order('created_at', { ascending: true })
+          .limit(maxMessages);
+
+        if (error) {
+          throw error;
+        }
+
+        rows = Array.isArray(data) ? data : [];
+      } else {
+        const query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
+        const data = await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}${query}`);
+        rows = Array.isArray(data) ? data : [];
       }
 
-      supportMessages = Array.isArray(data)
-        ? data.map((row) => ({
+      supportMessages = rows.map((row) => ({
             name: row.name || 'Compte',
             provider: row.provider || 'Compte',
             text: row.text || '',
             createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
-          }))
-        : [];
+          }));
 
       persistSupportMessages();
       renderSupportMessages();
@@ -1077,15 +1102,37 @@
       const hasSupabase = Boolean(window.supabase && window.supabase.createClient);
       const hasConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 
-      if (!hasSupabase || !hasConfig) {
+      if (!hasConfig) {
         isRealtimeEnabled = false;
+        isCloudSyncEnabled = false;
         showComposeNotice('Mode local actif. Ajoute Supabase pour une synchro telephone + PC.');
+        return;
+      }
+
+      isCloudSyncEnabled = true;
+
+      if (!hasSupabase) {
+        isRealtimeEnabled = false;
+        supabaseClient = null;
+        showComposeNotice('Mode cloud actif. Synchronisation commentaires active.');
+
+        await pullSupportMessagesFromSupabase();
+
+        if (!messagesSyncIntervalId) {
+          messagesSyncIntervalId = window.setInterval(() => {
+            pullSupportMessagesFromSupabase().catch(() => {
+              // Keep latest successful state if polling fails.
+            });
+          }, syncPollMs);
+        }
+
         return;
       }
 
       try {
         supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
         isRealtimeEnabled = true;
+        isCloudSyncEnabled = true;
         showComposeNotice('Mode temps reel actif. Messages synchronises entre appareils.');
 
         await pullSupportMessagesFromSupabase();
@@ -1135,17 +1182,28 @@
       } catch (e) {
         isRealtimeEnabled = false;
         supabaseClient = null;
-        showComposeNotice('Mode local actif. La connexion temps reel a echoue.');
+        isCloudSyncEnabled = true;
+        showComposeNotice('Mode cloud actif. Synchronisation commentaires active.');
+
+        await pullSupportMessagesFromSupabase();
       }
     }
 
     async function pruneSupabaseMessagesIfNeeded() {
-      if (!isRealtimeEnabled || !supabaseClient) {
+      if (!isCloudSyncEnabled) {
         return;
       }
 
       // Uses a DB function (SECURITY DEFINER) to prune safely without exposing broad delete rights to clients.
-      await supabaseClient.rpc('prune_support_messages', { max_rows: maxMessages });
+      if (supabaseClient) {
+        await supabaseClient.rpc('prune_support_messages', { max_rows: maxMessages });
+        return;
+      }
+
+      await supabaseRestRequest('/rest/v1/rpc/prune_support_messages', {
+        method: 'POST',
+        body: JSON.stringify({ max_rows: maxMessages })
+      });
     }
 
     function renderSupportMessages() {
@@ -1205,18 +1263,32 @@
       publishMessageBtn.disabled = true;
       showComposeNotice('Publication en cours...');
 
-      if (isRealtimeEnabled && supabaseClient) {
+      if (isCloudSyncEnabled) {
         try {
-          const { error } = await supabaseClient
-            .from(supabaseConfig.table)
-            .insert({
-              name: authUser.name,
-              provider: authUser.provider,
-              text: messageText
-            });
+          if (supabaseClient) {
+            const { error } = await supabaseClient
+              .from(supabaseConfig.table)
+              .insert({
+                name: authUser.name,
+                provider: authUser.provider,
+                text: messageText
+              });
 
-          if (error) {
-            throw error;
+            if (error) {
+              throw error;
+            }
+          } else {
+            await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}`, {
+              method: 'POST',
+              headers: {
+                Prefer: 'return=minimal'
+              },
+              body: JSON.stringify({
+                name: authUser.name,
+                provider: authUser.provider,
+                text: messageText
+              })
+            });
           }
 
           window.localStorage.setItem(lastPublishStorageKey, String(now));
@@ -1229,7 +1301,7 @@
           return;
         } catch (e) {
           // Fallback to local mode if realtime write fails.
-          showComposeNotice('Echec temps reel, bascule en mode local.');
+          showComposeNotice('Echec cloud, bascule en mode local.');
         }
       }
 
