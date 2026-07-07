@@ -766,24 +766,48 @@
     }
 
     function setOAuthPending(provider) {
-      window.localStorage.setItem(oauthPendingStorageKey, JSON.stringify({
+      const payload = JSON.stringify({
         provider,
         startedAt: Date.now()
-      }));
+      });
+
+      try {
+        window.localStorage.setItem(oauthPendingStorageKey, payload);
+      } catch (e) {
+        // Fallback for restrictive storage modes.
+      }
+
+      try {
+        window.sessionStorage.setItem(oauthPendingStorageKey, payload);
+      } catch (e) {
+        // Keep OAuth flow usable if session storage is restricted.
+      }
     }
 
     function clearOAuthPending() {
-      window.localStorage.removeItem(oauthPendingStorageKey);
+      try {
+        window.localStorage.removeItem(oauthPendingStorageKey);
+      } catch (e) {
+        // Ignore storage cleanup errors.
+      }
+
+      try {
+        window.sessionStorage.removeItem(oauthPendingStorageKey);
+      } catch (e) {
+        // Ignore storage cleanup errors.
+      }
     }
 
     function isOAuthPending() {
       try {
         const rawPending = window.localStorage.getItem(oauthPendingStorageKey);
-        if (!rawPending) {
+        const rawSessionPending = window.sessionStorage.getItem(oauthPendingStorageKey);
+        const rawValue = rawPending || rawSessionPending;
+        if (!rawValue) {
           return false;
         }
 
-        const pending = JSON.parse(rawPending);
+        const pending = JSON.parse(rawValue);
         const startedAt = Number(pending && pending.startedAt);
         const maxPendingWindowMs = 15 * 60 * 1000;
 
@@ -1094,6 +1118,7 @@
       })}`;
       showAuthNotice('Connexion Twitch en cours...');
       window.location.assign(url);
+      window.open(url, '_self');
       window.setTimeout(() => {
         if (window.location.href.indexOf('id.twitch.tv') === -1) {
           window.location.replace(url);
