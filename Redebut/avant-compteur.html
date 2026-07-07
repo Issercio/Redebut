@@ -9,7 +9,7 @@
   <title>Un nouveau chapitre</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase-config.js"></script>
+  <script src="./supabase-config.js?v=2"></script>
   <style>
     body {
       margin: 0;
@@ -670,7 +670,6 @@
     let supabaseClient = null;
     let isRealtimeEnabled = false;
     let isCloudSyncEnabled = false;
-    let cloudHardFailure = false;
     let messagesSyncIntervalId = null;
     let authUser = null;
     let authStatus = null;
@@ -824,10 +823,6 @@
     }
 
     async function supabaseRestRequest(path, options = {}) {
-      if (cloudHardFailure) {
-        throw new Error('cloud_hard_failure');
-      }
-
       const looksLikeJwt = (supabaseConfig.anonKey || '').split('.').length === 3;
       const headers = {
         apikey: supabaseConfig.anonKey,
@@ -839,21 +834,11 @@
         headers.Authorization = `Bearer ${supabaseConfig.anonKey}`;
       }
 
-      let response;
-      try {
-        response = await fetch(`${supabaseConfig.url}${path}`, {
-          method: options.method || 'GET',
-          headers,
-          body: options.body
-        });
-      } catch (e) {
-        cloudHardFailure = true;
-        isCloudSyncEnabled = false;
-        isRealtimeEnabled = false;
-        supabaseClient = null;
-        showComposeNotice('Cloud indisponible (URL Supabase). Messages en mode local.');
-        throw e;
-      }
+      const response = await fetch(`${supabaseConfig.url}${path}`, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body
+      });
 
       if (!response.ok) {
         throw new Error(`supabase_rest_error_${response.status}`);
@@ -864,24 +849,6 @@
       }
 
       return response.json();
-    }
-
-    async function preflightSupabaseCloud() {
-      if (!supabaseConfig.url || !supabaseConfig.anonKey) {
-        return false;
-      }
-
-      try {
-        await fetch(`${supabaseConfig.url}/auth/v1/health`, { method: 'GET' });
-        return true;
-      } catch (e) {
-        cloudHardFailure = true;
-        isCloudSyncEnabled = false;
-        isRealtimeEnabled = false;
-        supabaseClient = null;
-        showComposeNotice('Cloud indisponible: URL Supabase introuvable.');
-        return false;
-      }
     }
 
     function createOauthState() {
@@ -1164,21 +1131,10 @@
       const hasSupabase = Boolean(window.supabase && window.supabase.createClient);
       const hasConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 
-      if (cloudHardFailure) {
-        isRealtimeEnabled = false;
-        isCloudSyncEnabled = false;
-        return;
-      }
-
       if (!hasConfig) {
         isRealtimeEnabled = false;
         isCloudSyncEnabled = false;
         showComposeNotice('Cloud non configure. Messages en mode local.');
-        return;
-      }
-
-      const cloudReachable = await preflightSupabaseCloud();
-      if (!cloudReachable) {
         return;
       }
 
@@ -1255,9 +1211,8 @@
       } catch (e) {
         isRealtimeEnabled = false;
         supabaseClient = null;
-        isCloudSyncEnabled = false;
-        cloudHardFailure = true;
-        showComposeNotice('Cloud indisponible. Messages en mode local.');
+        isCloudSyncEnabled = true;
+        showComposeNotice('Cloud partiel: realtime indisponible, tentative REST active.');
       }
     }
 
