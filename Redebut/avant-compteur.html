@@ -463,15 +463,25 @@
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
     const forcedCachePurgeVersion = 'v2';
     const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
+    const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+    const initialSearch = new URLSearchParams(window.location.search);
+    const hasOAuthCallbackOnLoad = Boolean(
+      initialHash.includes('access_token=')
+      || initialHash.includes('error=')
+      || initialSearch.has('code')
+      || initialSearch.has('error')
+    );
     if (!window.localStorage.getItem(forcedCachePurgeKey)) {
       const keysToClear = [
         'redebut-countdown-target-date-shared',
         'redebut-countdown-reset-version-shared',
         'redebut-auth-user-v2',
-        'redebut-oauth-flow-v2',
-        'redebut-oauth-pending-v1',
         'redebut-support-messages-v2'
       ];
+
+      if (!hasOAuthCallbackOnLoad) {
+        keysToClear.push('redebut-oauth-flow-v2', 'redebut-oauth-pending-v1');
+      }
 
       keysToClear.forEach((key) => window.localStorage.removeItem(key));
       window.localStorage.setItem(forcedCachePurgeKey, String(Date.now()));
@@ -1045,7 +1055,6 @@
         redirect_uri: oauthConfig.twitchRedirectUri,
         response_type: 'token',
         scope: 'user:read:email',
-        force_verify: 'true',
         state
       })}`;
       showAuthNotice('Connexion Twitch en cours...');
@@ -1121,11 +1130,19 @@
       }
 
       let rows = [];
+      const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
+      const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
-        const { data, error } = await supabaseClient
+        let queryBuilder = supabaseClient
           .from(supabaseConfig.table)
-          .select('name, provider, text, created_at')
+          .select('name, provider, text, created_at');
+
+        if (hasRoundStart) {
+          queryBuilder = queryBuilder.gte('created_at', roundStartIso);
+        }
+
+        const { data, error } = await queryBuilder
           .order('created_at', { ascending: true })
           .limit(maxMessages);
 
@@ -1135,7 +1152,10 @@
 
         rows = Array.isArray(data) ? data : [];
       } else {
-        const query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
+        let query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
+        if (hasRoundStart) {
+          query += `&created_at=gte.${encodeURIComponent(roundStartIso)}`;
+        }
         const data = await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}${query}`);
         rows = Array.isArray(data) ? data : [];
       }
