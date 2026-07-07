@@ -672,6 +672,7 @@
     let supabaseClient = null;
     let isRealtimeEnabled = false;
     let isCloudSyncEnabled = false;
+    let cloudHardFailure = false;
     let messagesSyncIntervalId = null;
     let authUser = null;
     let authStatus = null;
@@ -825,6 +826,10 @@
     }
 
     async function supabaseRestRequest(path, options = {}) {
+      if (cloudHardFailure) {
+        throw new Error('cloud_hard_failure');
+      }
+
       const looksLikeJwt = (supabaseConfig.anonKey || '').split('.').length === 3;
       const headers = {
         apikey: supabaseConfig.anonKey,
@@ -836,11 +841,21 @@
         headers.Authorization = `Bearer ${supabaseConfig.anonKey}`;
       }
 
-      const response = await fetch(`${supabaseConfig.url}${path}`, {
-        method: options.method || 'GET',
-        headers,
-        body: options.body
-      });
+      let response;
+      try {
+        response = await fetch(`${supabaseConfig.url}${path}`, {
+          method: options.method || 'GET',
+          headers,
+          body: options.body
+        });
+      } catch (e) {
+        cloudHardFailure = true;
+        isCloudSyncEnabled = false;
+        isRealtimeEnabled = false;
+        supabaseClient = null;
+        showComposeNotice('Cloud indisponible (URL Supabase). Messages en mode local.');
+        throw e;
+      }
 
       if (!response.ok) {
         throw new Error(`supabase_rest_error_${response.status}`);
@@ -1133,10 +1148,16 @@
       const hasSupabase = Boolean(window.supabase && window.supabase.createClient);
       const hasConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 
+      if (cloudHardFailure) {
+        isRealtimeEnabled = false;
+        isCloudSyncEnabled = false;
+        return;
+      }
+
       if (!hasConfig) {
         isRealtimeEnabled = false;
         isCloudSyncEnabled = false;
-        showComposeNotice('Cloud non configure. Active Supabase pour publier des messages.');
+        showComposeNotice('Cloud non configure. Messages en mode local.');
         return;
       }
 
@@ -1213,10 +1234,9 @@
       } catch (e) {
         isRealtimeEnabled = false;
         supabaseClient = null;
-        isCloudSyncEnabled = true;
-        showComposeNotice('Mode cloud actif. Synchronisation commentaires active.');
-
-        await pullSupportMessagesFromSupabase();
+        isCloudSyncEnabled = false;
+        cloudHardFailure = true;
+        showComposeNotice('Cloud indisponible. Messages en mode local.');
       }
     }
 
@@ -1350,7 +1370,20 @@
         }
       }
 
-      showComposeNotice('Publication impossible: cloud indisponible.');
+      supportMessages.push({
+        name: authUser.name,
+        provider: authUser.provider,
+        text: messageText,
+        createdAt: Date.now()
+      });
+
+      supportMessages = supportMessages.slice(-maxMessages);
+      persistSupportMessages();
+      window.localStorage.setItem(lastPublishStorageKey, String(now));
+      textArea.value = '';
+      refreshText();
+      renderSupportMessages();
+      showComposeNotice('Message publie en mode local.');
       publishMessageBtn.disabled = !isAuthenticated();
     }
 
