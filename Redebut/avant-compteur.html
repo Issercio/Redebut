@@ -483,7 +483,10 @@
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
-    let targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + countdownDurationMs);
+    const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
+    const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs) && parsedStoredTargetMs > Date.now();
+    let targetDate = hasUsableStoredTarget ? new Date(parsedStoredTargetMs) : new Date(Date.now() + countdownDurationMs);
+    let canAutoRedirect = false;
 
     let countdownIntervalId = null;
 
@@ -497,7 +500,7 @@
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
 
-        if (!window.__redirected) {
+        if (canAutoRedirect && !window.__redirected) {
           window.__redirected = true;
           window.location.href = nextPageHref;
         }
@@ -533,9 +536,15 @@
         countdownResetVersion = config.resetVersion || countdownResetVersion;
         countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
         const sharedTargetDate = new Date(config.targetDate);
-        window.localStorage.setItem(countdownStorageKey, sharedTargetDate.toISOString());
+        const sharedTargetMs = sharedTargetDate.getTime();
+        const hasFutureSharedTarget = Number.isFinite(sharedTargetMs) && sharedTargetMs > Date.now();
+        const effectiveTargetDate = hasFutureSharedTarget
+          ? new Date(sharedTargetMs)
+          : new Date(Date.now() + countdownDurationMs);
+
+        window.localStorage.setItem(countdownStorageKey, effectiveTargetDate.toISOString());
         window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
-        targetDate = sharedTargetDate;
+        targetDate = effectiveTargetDate;
 
         window.__redirected = false;
         updateCountdown();
@@ -1130,6 +1139,7 @@
 
     (async () => {
       await loadSharedCountdownConfig();
+      canAutoRedirect = true;
       await handleOAuthCallbackIfPresent();
       await setupRealtimeSupportMessages();
       updateAuthUi();
