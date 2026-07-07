@@ -661,7 +661,7 @@
       // Fill these 2 values to enable shared live messages on phone + PC.
       url: runtimeSupabaseConfig.url || '',
       anonKey: runtimeSupabaseConfig.anonKey || '',
-      table: 'support_messages',
+      table: runtimeSupabaseConfig.table || 'support_messages',
       channel: 'redebut-support-messages-live-v1'
     };
 
@@ -670,6 +670,7 @@
     let supabaseClient = null;
     let isRealtimeEnabled = false;
     let isCloudSyncEnabled = false;
+    let cloudDisabledForSession = false;
     let messagesSyncIntervalId = null;
     let authUser = null;
     let authStatus = null;
@@ -823,6 +824,10 @@
     }
 
     async function supabaseRestRequest(path, options = {}) {
+      if (cloudDisabledForSession) {
+        throw new Error('cloud_disabled_for_session');
+      }
+
       const looksLikeJwt = (supabaseConfig.anonKey || '').split('.').length === 3;
       const headers = {
         apikey: supabaseConfig.anonKey,
@@ -841,6 +846,13 @@
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          cloudDisabledForSession = true;
+          isCloudSyncEnabled = false;
+          isRealtimeEnabled = false;
+          supabaseClient = null;
+          showComposeNotice(`Cloud indisponible: table ${supabaseConfig.table} introuvable.`);
+        }
         throw new Error(`supabase_rest_error_${response.status}`);
       }
 
@@ -1128,6 +1140,12 @@
     }
 
     async function setupRealtimeSupportMessages() {
+      if (cloudDisabledForSession) {
+        isRealtimeEnabled = false;
+        isCloudSyncEnabled = false;
+        return;
+      }
+
       const hasSupabase = Boolean(window.supabase && window.supabase.createClient);
       const hasConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 
@@ -1211,8 +1229,11 @@
       } catch (e) {
         isRealtimeEnabled = false;
         supabaseClient = null;
+        isCloudSyncEnabled = false;
+        showComposeNotice('Realtime indisponible. Messages cloud via API REST.');
+
+        // Keep cloud mode active through REST when websocket/realtime setup fails.
         isCloudSyncEnabled = true;
-        showComposeNotice('Cloud partiel: realtime indisponible, tentative REST active.');
       }
     }
 
@@ -1341,8 +1362,8 @@
           showComposeNotice('Message publie et synchronise.');
           return;
         } catch (e) {
-          showComposeNotice('Cloud indisponible. Message non publie, reessaie dans quelques secondes.');
-          return;
+          isCloudSyncEnabled = false;
+          showComposeNotice('Cloud indisponible. Message publie en mode local.');
         }
       }
 
