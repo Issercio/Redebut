@@ -253,6 +253,27 @@
       margin: 0;
       color: #6b7280;
       font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .message-author {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+
+    .provider-logo {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      border-radius: 3px;
+      object-fit: contain;
+      background: #fff;
     }
 
     .empty-state {
@@ -495,9 +516,13 @@
     const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
+    const countdownDurationStorageKey = 'redebut-countdown-duration-ms-shared';
     const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
-    let countdownDurationMs = 60 * 60 * 1000;
+    const storedDurationMs = Number(window.localStorage.getItem(countdownDurationStorageKey) || '0');
+    let countdownDurationMs = Number.isFinite(storedDurationMs) && storedDurationMs > 0
+      ? storedDurationMs
+      : 60 * 60 * 1000;
     let serverTimeOffsetMs = 0;
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
     const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
@@ -599,6 +624,7 @@
         const configResetVersion = config.resetVersion || countdownResetVersion;
         const previousResetVersion = window.localStorage.getItem(countdownVersionStorageKey);
         countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
+        window.localStorage.setItem(countdownDurationStorageKey, String(countdownDurationMs));
         const sharedTargetDate = new Date(config.targetDate);
         const sharedTargetMs = sharedTargetDate.getTime();
         const computedRoundStartMs = Number.isFinite(sharedTargetMs) ? (sharedTargetMs - countdownDurationMs) : NaN;
@@ -1388,6 +1414,29 @@
       });
     }
 
+    function getProviderLogoInfo(providerRaw) {
+      const providerLabel = String(providerRaw || '').trim().toLowerCase();
+
+      if (providerLabel === 'google') {
+        return {
+          label: 'Google',
+          logoUrl: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'
+        };
+      }
+
+      if (providerLabel === 'twitch') {
+        return {
+          label: 'Twitch',
+          logoUrl: 'https://www.twitch.tv/favicon.ico'
+        };
+      }
+
+      return {
+        label: providerRaw || 'Compte',
+        logoUrl: ''
+      };
+    }
+
     function renderSupportMessages() {
       messagesList.innerHTML = '';
 
@@ -1412,7 +1461,29 @@
           const meta = document.createElement('p');
           meta.className = 'message-meta';
           const dateText = new Date(entry.createdAt).toLocaleString('fr-FR');
-          meta.textContent = `${entry.name} (${entry.provider || 'Compte'}) - ${dateText}`;
+
+          const providerInfo = getProviderLogoInfo(entry.provider);
+          const authorWrap = document.createElement('span');
+          authorWrap.className = 'message-author';
+
+          if (providerInfo.logoUrl) {
+            const logo = document.createElement('img');
+            logo.className = 'provider-logo';
+            logo.src = providerInfo.logoUrl;
+            logo.alt = providerInfo.label;
+            logo.title = providerInfo.label;
+            authorWrap.appendChild(logo);
+          }
+
+          const authorText = document.createElement('span');
+          authorText.textContent = entry.name || 'Compte';
+          authorWrap.appendChild(authorText);
+
+          const dateNode = document.createElement('span');
+          dateNode.textContent = `- ${dateText}`;
+
+          meta.appendChild(authorWrap);
+          meta.appendChild(dateNode);
 
           item.appendChild(text);
           item.appendChild(meta);
