@@ -112,7 +112,14 @@
       padding: 10px 12px;
       font: inherit;
       resize: vertical;
+    }
+
+    textarea {
       min-height: 100px;
+    }
+
+    input {
+      min-height: 44px;
     }
 
     .preview {
@@ -125,6 +132,65 @@
       min-height: 80px;
       border: 1px dashed #c4b5fd;
       white-space: pre-wrap;
+    }
+
+    .support-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .support-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: #7c3aed;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .support-btn:hover {
+      background: #6d28d9;
+    }
+
+    .messages-list {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      max-height: 240px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .message-item {
+      background: #fff;
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .message-item p {
+      margin: 0 0 6px;
+      color: #374151;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .message-meta {
+      margin: 0;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .empty-state {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      background: #fff;
+      border: 1px dashed #d8b4fe;
+      border-radius: 10px;
+      padding: 10px 12px;
     }
 
     .video-frame {
@@ -259,9 +325,15 @@
 
     <div class="content-grid">
       <div class="panel">
-        <label for="customText">Message de remerciement</label>
-        <textarea id="customText" placeholder="Écris ici ton message de remerciement">Merci pour votre soutien et votre présence.</textarea>
-        <div id="textPreview" class="preview"></div>
+        <label for="supportName">Ton prénom (optionnel)</label>
+        <input id="supportName" type="text" placeholder="Ex: Camille" maxlength="40" />
+        <label for="customText">Laisse un message de soutien et d'amour</label>
+        <textarea id="customText" placeholder="Écris ici ton message de soutien..."></textarea>
+        <div id="textPreview" class="preview" aria-live="polite">Aperçu de ton message...</div>
+        <div class="support-actions">
+          <button id="publishMessage" type="button" class="support-btn">Publier le message</button>
+        </div>
+        <div id="messagesList" class="messages-list" aria-live="polite"></div>
       </div>
 
       <div class="panel">
@@ -278,7 +350,6 @@
       </div>
     </div>
 
-    <a id="nextLink" href="Apres compteur/Redebut.html" class="btn btn-disabled">Voir la page suivante</a>
   </div>
 
   <script>
@@ -290,7 +361,7 @@
       window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
     }
 
-    const nextLink = document.getElementById('nextLink');
+    const nextPageHref = 'Apres compteur/Redebut.html';
 
     function updateCountdown() {
       const now = new Date().getTime();
@@ -301,18 +372,13 @@
         document.getElementById('hours').textContent = '00';
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
-        nextLink.classList.remove('btn-disabled');
-        nextLink.removeAttribute('aria-disabled');
 
         if (!window.__redirected) {
           window.__redirected = true;
-          window.location.href = nextLink.getAttribute('href');
+          window.location.href = nextPageHref;
         }
         return;
       }
-
-      nextLink.classList.add('btn-disabled');
-      nextLink.setAttribute('aria-disabled', 'true');
 
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -330,13 +396,103 @@
 
     const textArea = document.getElementById('customText');
     const textPreview = document.getElementById('textPreview');
+    const supportNameInput = document.getElementById('supportName');
+    const publishMessageBtn = document.getElementById('publishMessage');
+    const messagesList = document.getElementById('messagesList');
+    const supportMessagesStorageKey = 'redebut-support-messages-v1';
+
+    let supportMessages = [];
+    try {
+      const storedMessages = window.localStorage.getItem(supportMessagesStorageKey);
+      supportMessages = storedMessages ? JSON.parse(storedMessages) : [];
+      if (!Array.isArray(supportMessages)) {
+        supportMessages = [];
+      }
+    } catch (e) {
+      supportMessages = [];
+    }
 
     function refreshText() {
-      textPreview.textContent = textArea.value.trim() || 'Merci pour votre soutien.';
+      const typedMessage = textArea.value.trim();
+      const typedName = supportNameInput.value.trim();
+      if (!typedMessage) {
+        textPreview.textContent = 'Aperçu de ton message...';
+        return;
+      }
+
+      textPreview.textContent = `${typedMessage}\n- ${typedName || 'Anonyme'}`;
+    }
+
+    function persistSupportMessages() {
+      window.localStorage.setItem(supportMessagesStorageKey, JSON.stringify(supportMessages));
+    }
+
+    function renderSupportMessages() {
+      messagesList.innerHTML = '';
+
+      if (!supportMessages.length) {
+        const empty = document.createElement('p');
+        empty.className = 'empty-state';
+        empty.textContent = 'Aucun message pour le moment. Sois la premiere personne a laisser un mot doux.';
+        messagesList.appendChild(empty);
+        return;
+      }
+
+      supportMessages
+        .slice()
+        .reverse()
+        .forEach((entry) => {
+          const item = document.createElement('article');
+          item.className = 'message-item';
+
+          const text = document.createElement('p');
+          text.textContent = entry.text;
+
+          const meta = document.createElement('p');
+          meta.className = 'message-meta';
+          const dateText = new Date(entry.createdAt).toLocaleString('fr-FR');
+          meta.textContent = `${entry.name || 'Anonyme'} - ${dateText}`;
+
+          item.appendChild(text);
+          item.appendChild(meta);
+          messagesList.appendChild(item);
+        });
+    }
+
+    function publishSupportMessage() {
+      const messageText = textArea.value.trim();
+      const senderName = supportNameInput.value.trim() || 'Anonyme';
+
+      if (!messageText) {
+        textArea.focus();
+        return;
+      }
+
+      supportMessages.push({
+        name: senderName,
+        text: messageText,
+        createdAt: Date.now()
+      });
+
+      supportMessages = supportMessages.slice(-100);
+      persistSupportMessages();
+      textArea.value = '';
+      refreshText();
+      renderSupportMessages();
     }
 
     textArea.addEventListener('input', refreshText);
+    supportNameInput.addEventListener('input', refreshText);
+    publishMessageBtn.addEventListener('click', publishSupportMessage);
+    textArea.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        publishSupportMessage();
+      }
+    });
+
     refreshText();
+    renderSupportMessages();
 
     // video section is rendered directly with the local video file
 

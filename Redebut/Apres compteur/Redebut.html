@@ -25,7 +25,7 @@
     }
 
     .bg-img {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 0;
       pointer-events: none;
@@ -35,7 +35,6 @@
       background-repeat: no-repeat;
       background-color: #f7f1ff;
       opacity: 0.95;
-      filter: saturate(1.05) contrast(1.02);
     }
 
     .bg-img::before {
@@ -144,7 +143,6 @@
       border-radius: 24px;
       box-shadow: 0 14px 36px rgba(0,0,0,0.08);
       border: 1px solid rgba(124, 58, 237, 0.12);
-      backdrop-filter: blur(8px);
       position: relative;
       z-index: 2;
     }
@@ -166,10 +164,12 @@
       background: #ffffff;
       border-radius: 18px;
       padding: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       border: 1px solid #ece7ff;
       position: relative;
       z-index: 2;
+      content-visibility: auto;
+      contain-intrinsic-size: 120px;
     }
 
     .goal-card strong {
@@ -199,6 +199,18 @@
       box-shadow: 0 6px 16px rgba(124, 58, 237, 0.06);
       position: relative;
       z-index: 2;
+    }
+
+    .donation-warning {
+      margin: 0 0 20px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid #fbcfe8;
+      border-left: 4px solid #ec4899;
+      border-radius: 14px;
+      color: #4b5563;
+      line-height: 1.7;
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.08);
     }
 
     .goal-note p {
@@ -231,6 +243,7 @@ Pour célébrer mes débuts sous un nom ainsi que l'arrivée de mon nouveau mod�
 
     <section class="goals-section">
       <h2>Objectifs du donathon</h2>
+      <p class="donation-warning">Les dons sont totalement facultatifs. Ne vous mettez surtout pas dans le rouge : votre presence et votre soutien comptent deja enormement pour l'evenement.</p>
       <div class="goal-note">
         <p>✨ Tous les 50€ votre nom est présent sur l'overlay du live.<br>
         🎨 Tous les 10€ un petit croquis.</p>
