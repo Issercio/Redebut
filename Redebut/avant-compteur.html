@@ -368,16 +368,34 @@
       z-index: 2;
     }
 
-    .oauth-feedback {
-      margin: 10px 0 18px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      font-size: 14px;
-      line-height: 1.5;
-      display: none;
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .video-frame {
+        min-height: 320px;
+        padding: 8px;
+      }
+
+      .video-card {
+        padding: 8px;
+      }
+
+      .video-card video {
+        min-height: 260px;
+        max-height: 62vh;
+        object-fit: cover;
+      }
     }
 
   </style>
@@ -396,7 +414,6 @@
       <div class="time-box"><strong id="minutes">00</strong><span>Minutes</span></div>
       <div class="time-box"><strong id="seconds">00</strong><span>Secondes</span></div>
     </div>
-    <div id="oauthFeedback" class="oauth-feedback" aria-live="polite"></div>
 
     <div class="content-grid">
       <div class="panel">
@@ -448,7 +465,6 @@
     const countdownConfigUrl = './countdown-config.json';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
-    const oauthFeedback = document.getElementById('oauthFeedback');
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
@@ -469,11 +485,6 @@
         if (countdownIntervalId) {
           window.clearInterval(countdownIntervalId);
           countdownIntervalId = null;
-        }
-
-        if (oauthFeedback) {
-          oauthFeedback.textContent = 'Compteur termine: redirection automatique desactivee.';
-          oauthFeedback.style.display = 'block';
         }
         return;
       }
@@ -624,11 +635,6 @@
     }
 
     function showAuthNotice(message) {
-      if (oauthFeedback) {
-        oauthFeedback.textContent = message;
-        oauthFeedback.style.display = 'block';
-      }
-
       if (authStatus) {
         authStatus.textContent = message;
       }
