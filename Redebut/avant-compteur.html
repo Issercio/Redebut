@@ -579,6 +579,7 @@
         }
 
         const configResetVersion = config.resetVersion || countdownResetVersion;
+        const previousResetVersion = window.localStorage.getItem(countdownVersionStorageKey);
         countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
         const sharedTargetDate = new Date(config.targetDate);
         const sharedTargetMs = sharedTargetDate.getTime();
@@ -586,10 +587,22 @@
           return;
         }
 
+        const nextRoundStartMs = sharedTargetMs - countdownDurationMs;
+        if (Number.isFinite(nextRoundStartMs) && nextRoundStartMs > 0) {
+          messagesRoundStartMs = nextRoundStartMs;
+          window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
+        }
+
         countdownResetVersion = configResetVersion;
         targetDate = new Date(sharedTargetMs);
         window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
         window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
+
+        if (previousResetVersion && previousResetVersion !== configResetVersion) {
+          supportMessages = [];
+          window.localStorage.removeItem(supportMessagesStorageKey);
+          renderSupportMessages();
+        }
 
         window.__redirected = false;
         updateCountdown();
@@ -621,6 +634,7 @@
     const messagesList = document.getElementById('messagesList');
     const supportMessagesVersion = 'v3';
     const supportMessagesStorageKey = `redebut-support-messages-${supportMessagesVersion}`;
+    const messagesRoundStartStorageKey = 'redebut-messages-round-start-ms-v1';
     const lastPublishStorageKey = 'redebut-last-publish-at-v1';
     const authStorageKey = 'redebut-auth-user-v2';
     const authBox = document.getElementById('authBox');
@@ -651,6 +665,7 @@
     };
 
     let supportMessages = [];
+    let messagesRoundStartMs = Number(window.localStorage.getItem(messagesRoundStartStorageKey) || '0');
     let supabaseClient = null;
     let isRealtimeEnabled = false;
     let isCloudSyncEnabled = false;
@@ -1036,6 +1051,7 @@
       if (!Array.isArray(supportMessages)) {
         supportMessages = [];
       }
+      supportMessages = filterMessagesForCurrentRound(supportMessages);
     } catch (e) {
       supportMessages = [];
     }
@@ -1060,6 +1076,21 @@
           messages: supportMessages
         });
       }
+    }
+
+    function filterMessagesForCurrentRound(messages) {
+      if (!Array.isArray(messages)) {
+        return [];
+      }
+
+      if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
+        return messages;
+      }
+
+      return messages.filter((entry) => {
+        const createdAtMs = Number(entry && entry.createdAt);
+        return Number.isFinite(createdAtMs) && createdAtMs >= messagesRoundStartMs;
+      });
     }
 
     async function pullSupportMessagesFromSupabase() {
@@ -1093,6 +1124,8 @@
             text: row.text || '',
             createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
           }));
+
+      supportMessages = filterMessagesForCurrentRound(supportMessages);
 
       persistSupportMessages();
       renderSupportMessages();
@@ -1300,8 +1333,9 @@
           showComposeNotice('Message publie et synchronise.');
           return;
         } catch (e) {
-          // Fallback to local mode if realtime write fails.
-          showComposeNotice('Echec cloud, bascule en mode local.');
+          // In cloud mode, never write locally to avoid PC/mobile divergence.
+          showComposeNotice('Echec cloud. Message non publie, reessaie dans quelques secondes.');
+          return;
         }
       }
 
@@ -1329,7 +1363,7 @@
 
       try {
         const nextMessages = event.newValue ? JSON.parse(event.newValue) : [];
-        supportMessages = Array.isArray(nextMessages) ? nextMessages : [];
+        supportMessages = filterMessagesForCurrentRound(Array.isArray(nextMessages) ? nextMessages : []);
       } catch (e) {
         supportMessages = [];
       }
@@ -1344,7 +1378,7 @@
           return;
         }
 
-        supportMessages = Array.isArray(payload.messages) ? payload.messages : [];
+        supportMessages = filterMessagesForCurrentRound(Array.isArray(payload.messages) ? payload.messages : []);
         renderSupportMessages();
       };
     }
