@@ -822,12 +822,16 @@
     }
 
     async function supabaseRestRequest(path, options = {}) {
+      const looksLikeJwt = (supabaseConfig.anonKey || '').split('.').length === 3;
       const headers = {
         apikey: supabaseConfig.anonKey,
-        Authorization: `Bearer ${supabaseConfig.anonKey}`,
         'Content-Type': 'application/json',
         ...(options.headers || {})
       };
+
+      if (looksLikeJwt) {
+        headers.Authorization = `Bearer ${supabaseConfig.anonKey}`;
+      }
 
       const response = await fetch(`${supabaseConfig.url}${path}`, {
         method: options.method || 'GET',
@@ -1325,7 +1329,11 @@
           }
 
           window.localStorage.setItem(lastPublishStorageKey, String(now));
-          await pruneSupabaseMessagesIfNeeded();
+          try {
+            await pruneSupabaseMessagesIfNeeded();
+          } catch (e) {
+            // Do not fail message publishing if pruning is unavailable.
+          }
 
           textArea.value = '';
           refreshText();
