@@ -482,9 +482,10 @@
     const nextPageHref = 'Apres compteur/Redebut.html';
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
+    const storedCountdownVersion = window.localStorage.getItem(countdownVersionStorageKey);
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
     const parsedStoredTargetMs = storedTargetDate ? new Date(storedTargetDate).getTime() : NaN;
-    const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs) && parsedStoredTargetMs > Date.now();
+    const hasUsableStoredTarget = Number.isFinite(parsedStoredTargetMs);
     let targetDate = hasUsableStoredTarget ? new Date(parsedStoredTargetMs) : new Date(Date.now() + countdownDurationMs);
     let canAutoRedirect = false;
 
@@ -495,6 +496,26 @@
       const distance = targetDate - now;
 
       if (distance <= 0) {
+        if (isOAuthPending()) {
+          const safeTargetDate = new Date(Date.now() + countdownDurationMs);
+          targetDate = safeTargetDate;
+          window.localStorage.setItem(countdownStorageKey, safeTargetDate.toISOString());
+        }
+
+        const recoveredDistance = targetDate - now;
+        if (recoveredDistance > 0) {
+          const days = Math.floor(recoveredDistance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((recoveredDistance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((recoveredDistance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((recoveredDistance % (1000 * 60)) / 1000);
+
+          document.getElementById('days').textContent = String(days).padStart(2, '0');
+          document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+          document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+          document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+          return;
+        }
+
         document.getElementById('days').textContent = '00';
         document.getElementById('hours').textContent = '00';
         document.getElementById('minutes').textContent = '00';
@@ -533,18 +554,29 @@
           return;
         }
 
-        countdownResetVersion = config.resetVersion || countdownResetVersion;
+        const configResetVersion = config.resetVersion || countdownResetVersion;
         countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
         const sharedTargetDate = new Date(config.targetDate);
         const sharedTargetMs = sharedTargetDate.getTime();
-        const hasFutureSharedTarget = Number.isFinite(sharedTargetMs) && sharedTargetMs > Date.now();
-        const effectiveTargetDate = hasFutureSharedTarget
-          ? new Date(sharedTargetMs)
-          : new Date(Date.now() + countdownDurationMs);
+        if (!Number.isFinite(sharedTargetMs)) {
+          return;
+        }
 
-        window.localStorage.setItem(countdownStorageKey, effectiveTargetDate.toISOString());
-        window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
-        targetDate = effectiveTargetDate;
+        const localStoredVersion = window.localStorage.getItem(countdownVersionStorageKey) || storedCountdownVersion;
+        const localStoredTarget = window.localStorage.getItem(countdownStorageKey);
+        const localStoredTargetMs = localStoredTarget ? new Date(localStoredTarget).getTime() : NaN;
+        const hasLocalStoredTarget = Number.isFinite(localStoredTargetMs);
+        const hasSameResetVersion = localStoredVersion === configResetVersion;
+
+        countdownResetVersion = configResetVersion;
+
+        if (hasSameResetVersion && hasLocalStoredTarget) {
+          targetDate = new Date(localStoredTargetMs);
+        } else {
+          targetDate = new Date(sharedTargetMs);
+          window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
+          window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
+        }
 
         window.__redirected = false;
         updateCountdown();
@@ -564,16 +596,21 @@
     const authStorageKey = 'redebut-auth-user-v2';
     const authBox = document.getElementById('authBox');
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
+    const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const supportMessagesChannel = 'BroadcastChannel' in window ? new BroadcastChannel('redebut-support-messages-sync') : null;
     const runtimeSupabaseConfig = window.REDEBUT_SUPABASE_CONFIG || {};
     const configuredCooldownSeconds = Number(runtimeSupabaseConfig.publishCooldownSeconds);
     const configuredMaxMessages = Number(runtimeSupabaseConfig.maxMessages);
+    const configuredSyncPollSeconds = Number(runtimeSupabaseConfig.syncPollSeconds);
     const publishCooldownMs = Number.isFinite(configuredCooldownSeconds) && configuredCooldownSeconds > 0
       ? Math.round(configuredCooldownSeconds * 1000)
       : 8000;
     const maxMessages = Number.isFinite(configuredMaxMessages) && configuredMaxMessages > 0
       ? Math.round(configuredMaxMessages)
       : 100;
+    const syncPollMs = Number.isFinite(configuredSyncPollSeconds) && configuredSyncPollSeconds > 0
+      ? Math.round(configuredSyncPollSeconds * 1000)
+      : 5000;
     const supabaseConfig = {
       // Optional realtime sync across devices.
       // Fill these 2 values to enable shared live messages on phone + PC.
@@ -586,6 +623,7 @@
     let supportMessages = [];
     let supabaseClient = null;
     let isRealtimeEnabled = false;
+    let messagesSyncIntervalId = null;
     let authUser = null;
     let authStatus = null;
     let googleLogin = null;
@@ -617,6 +655,40 @@
         return rawFlow ? JSON.parse(rawFlow) : null;
       } catch (e) {
         return null;
+      }
+    }
+
+    function setOAuthPending(provider) {
+      window.localStorage.setItem(oauthPendingStorageKey, JSON.stringify({
+        provider,
+        startedAt: Date.now()
+      }));
+    }
+
+    function clearOAuthPending() {
+      window.localStorage.removeItem(oauthPendingStorageKey);
+    }
+
+    function isOAuthPending() {
+      try {
+        const rawPending = window.localStorage.getItem(oauthPendingStorageKey);
+        if (!rawPending) {
+          return false;
+        }
+
+        const pending = JSON.parse(rawPending);
+        const startedAt = Number(pending && pending.startedAt);
+        const maxPendingWindowMs = 15 * 60 * 1000;
+
+        if (!Number.isFinite(startedAt) || Date.now() - startedAt > maxPendingWindowMs) {
+          clearOAuthPending();
+          return false;
+        }
+
+        return true;
+      } catch (e) {
+        clearOAuthPending();
+        return false;
       }
     }
 
@@ -716,6 +788,7 @@
 
       const flow = getOAuthFlowState();
       window.localStorage.removeItem(oauthFlowStateKey);
+      clearOAuthPending();
 
       if (oauthError) {
         showAuthNotice('Connexion annulee ou refusee.');
@@ -790,12 +863,14 @@
       }
 
       if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        setOAuthPending('google');
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: oauthConfig.googleClientId,
           scope: 'openid profile email',
           prompt: 'select_account',
           callback: async (response) => {
             if (!response || !response.access_token) {
+              clearOAuthPending();
               showAuthNotice('Connexion Google annulee.');
               return;
             }
@@ -806,9 +881,12 @@
               showAuthNotice(`Connecte(e) avec Google : ${user.name}`);
             } catch (e) {
               showAuthNotice('Connexion Google impossible.');
+            } finally {
+              clearOAuthPending();
             }
           },
           error_callback: () => {
+            clearOAuthPending();
             showAuthNotice('Connexion Google impossible.');
           }
         });
@@ -818,6 +896,7 @@
       }
 
       const state = createOauthState();
+      setOAuthPending('google');
       window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
         provider: 'google',
         state,
@@ -846,6 +925,7 @@
       }
 
       const state = createOauthState();
+      setOAuthPending('twitch');
       window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
         provider: 'twitch',
         state,
@@ -880,6 +960,7 @@
         // Some OAuth providers can return query params instead of hash.
         // Keep user on this page and avoid countdown auto-redirect in this case.
         showAuthNotice('Connexion en cours, retour OAuth detecte.');
+        clearOAuthPending();
         clearOAuthParamsFromUrl();
       }
 
@@ -977,6 +1058,34 @@
             }
           )
           .subscribe();
+
+        if (!messagesSyncIntervalId) {
+          messagesSyncIntervalId = window.setInterval(() => {
+            if (!isRealtimeEnabled) {
+              return;
+            }
+
+            pullSupportMessagesFromSupabase().catch(() => {
+              // Keep latest successful state if polling fails.
+            });
+          }, syncPollMs);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && isRealtimeEnabled) {
+            pullSupportMessagesFromSupabase().catch(() => {
+              // Ignore transient refresh errors when tab becomes visible.
+            });
+          }
+        });
+
+        window.addEventListener('online', () => {
+          if (isRealtimeEnabled) {
+            pullSupportMessagesFromSupabase().catch(() => {
+              // Ignore transient network recovery errors.
+            });
+          }
+        });
       } catch (e) {
         isRealtimeEnabled = false;
         supabaseClient = null;
