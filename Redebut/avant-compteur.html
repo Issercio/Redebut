@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Un nouveau chapitre</title>
   <style>
     body {
@@ -159,29 +162,6 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-    }
-
-    .auth-help {
-      margin: 10px 0 0;
-      font-size: 13px;
-      color: #4b5563;
-      line-height: 1.5;
-    }
-
-    .auth-help strong {
-      color: #312e81;
-    }
-
-    .auth-uri {
-      display: inline-block;
-      margin-top: 4px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      background: #f5f3ff;
-      border: 1px solid #ddd6fe;
-      word-break: break-all;
-      color: #4338ca;
-      font-family: monospace;
     }
 
     .auth-btn {
@@ -364,6 +344,18 @@
       z-index: 2;
     }
 
+    .oauth-feedback {
+      margin: 10px 0 18px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 14px;
+      line-height: 1.5;
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -380,18 +372,11 @@
       <div class="time-box"><strong id="minutes">00</strong><span>Minutes</span></div>
       <div class="time-box"><strong id="seconds">00</strong><span>Secondes</span></div>
     </div>
+    <div id="oauthFeedback" class="oauth-feedback" aria-live="polite"></div>
 
     <div class="content-grid">
       <div class="panel">
-        <div class="auth-box">
-          <p id="authStatus" class="auth-status">Connecte-toi avec Google ou Twitch pour publier un message.</p>
-          <div class="auth-actions">
-            <button id="googleLogin" type="button" class="auth-btn">Connexion Google</button>
-            <button id="twitchLogin" type="button" class="auth-btn">Connexion Twitch</button>
-            <button id="logoutBtn" type="button" class="auth-btn">Se deconnecter</button>
-          </div>
-          <p id="oauthHelp" class="auth-help"></p>
-        </div>
+        <div id="authBox" class="auth-box"></div>
         <label for="customText">Laisse un message de soutien et d'amour</label>
         <textarea id="customText" placeholder="Ecris ici ton message de soutien..." disabled></textarea>
         <div id="textPreview" class="preview" aria-live="polite">Aperçu de ton message...</div>
@@ -417,15 +402,84 @@
   </div>
 
   <script>
-    const countdownStorageKey = 'redebut-countdown-target-date-v8';
-    const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
-    const targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + 60 * 60 * 1000);
+    const canonicalBeforePath = window.location.pathname;
+    const productionOrigin = 'https://miyuyume.edgeone.dev';
+    const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
+    const forcedCachePurgeVersion = 'v1';
+    const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
+    if (!window.localStorage.getItem(forcedCachePurgeKey)) {
+      const keysToClear = [
+        'redebut-countdown-target-date-shared',
+        'redebut-countdown-reset-version-shared',
+        'redebut-auth-user-v2',
+        'redebut-oauth-flow-v2',
+        'redebut-oauth-pending-v1',
+        'redebut-support-messages-v2'
+      ];
 
-    if (!storedTargetDate) {
-      window.localStorage.setItem(countdownStorageKey, targetDate.toISOString());
+      keysToClear.forEach((key) => window.localStorage.removeItem(key));
+      window.localStorage.setItem(forcedCachePurgeKey, String(Date.now()));
     }
 
-    const nextPageHref = 'Apres compteur/Redebut.html';
+    const countdownConfigUrl = './countdown-config.json';
+    const countdownStorageKey = 'redebut-countdown-target-date-shared';
+    const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
+    const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
+    const oauthFeedback = document.getElementById('oauthFeedback');
+    const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+    const initialSearch = new URLSearchParams(window.location.search);
+    const initialHasQueryOAuth = initialSearch.has('code') || initialSearch.has('error');
+    let isHandlingOAuthCallback = initialHash.includes('access_token=') || initialHash.includes('error=') || initialHasQueryOAuth;
+    let countdownResetVersion = 'v12';
+    let countdownDurationMs = 60 * 60 * 1000;
+    const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
+    let targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + countdownDurationMs);
+
+    function getOAuthPending() {
+      try {
+        const raw = window.localStorage.getItem(oauthPendingStorageKey);
+        const pending = raw ? JSON.parse(raw) : null;
+        if (!pending || !pending.startedAt) {
+          return null;
+        }
+
+        if (Date.now() - pending.startedAt > 10 * 60 * 1000) {
+          window.localStorage.removeItem(oauthPendingStorageKey);
+          return null;
+        }
+
+        return pending;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function hasActiveOAuthPending() {
+      return Boolean(getOAuthPending());
+    }
+
+    function setOAuthPending(provider) {
+      window.localStorage.setItem(oauthPendingStorageKey, JSON.stringify({
+        provider,
+        startedAt: Date.now(),
+        returnPath: canonicalBeforePath
+      }));
+      isHandlingOAuthCallback = true;
+    }
+
+    function clearOAuthPending() {
+      window.localStorage.removeItem(oauthPendingStorageKey);
+    }
+
+    if (hasActiveOAuthPending()) {
+      isHandlingOAuthCallback = true;
+      if (oauthFeedback) {
+        oauthFeedback.textContent = 'Connexion en cours, retour de Twitch/Google en attente...';
+        oauthFeedback.style.display = 'block';
+      }
+    }
+
+    let countdownIntervalId = null;
 
     function updateCountdown() {
       const now = new Date().getTime();
@@ -437,9 +491,14 @@
         document.getElementById('minutes').textContent = '00';
         document.getElementById('seconds').textContent = '00';
 
-        if (!window.__redirected) {
-          window.__redirected = true;
-          window.location.href = nextPageHref;
+        if (countdownIntervalId) {
+          window.clearInterval(countdownIntervalId);
+          countdownIntervalId = null;
+        }
+
+        if (oauthFeedback) {
+          oauthFeedback.textContent = 'Compteur termine: redirection automatique desactivee.';
+          oauthFeedback.style.display = 'block';
         }
         return;
       }
@@ -456,34 +515,63 @@
     }
 
     updateCountdown();
-    setInterval(updateCountdown, 1000);
+    countdownIntervalId = window.setInterval(updateCountdown, 1000);
+
+    async function loadSharedCountdownConfig() {
+      try {
+        const response = await fetch(`${countdownConfigUrl}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const config = await response.json();
+        if (!config || !config.targetDate) {
+          return;
+        }
+
+        countdownResetVersion = config.resetVersion || countdownResetVersion;
+        countdownDurationMs = Number(config.durationMs) || countdownDurationMs;
+        const sharedTargetDate = new Date(config.targetDate);
+        window.localStorage.setItem(countdownStorageKey, sharedTargetDate.toISOString());
+        window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
+        targetDate = sharedTargetDate;
+
+        window.__redirected = false;
+        updateCountdown();
+      } catch (e) {
+        // keep the last known local target date if the shared file is unavailable
+      }
+    }
 
     const textArea = document.getElementById('customText');
     const textPreview = document.getElementById('textPreview');
     const publishMessageBtn = document.getElementById('publishMessage');
     const messagesList = document.getElementById('messagesList');
     const supportMessagesStorageKey = 'redebut-support-messages-v2';
-    const authStorageKey = 'redebut-auth-user-v1';
-    const authStatus = document.getElementById('authStatus');
-    const googleLogin = document.getElementById('googleLogin');
-    const twitchLogin = document.getElementById('twitchLogin');
-    const logoutBtn = document.getElementById('logoutBtn');
+    const authStorageKey = 'redebut-auth-user-v2';
+    const authBox = document.getElementById('authBox');
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
-    const oauthHelp = document.getElementById('oauthHelp');
 
     let supportMessages = [];
     let authUser = null;
+    let authStatus = null;
+    let googleLogin = null;
+    let twitchLogin = null;
+    let logoutBtn = null;
     const oauthConfig = {
       googleClientId: '691290989737-hljsc29mhbk1kbcjjb7seiu0fderb0ev.apps.googleusercontent.com',
       twitchClientId: '28pgpqe8sa8y0iowuipn2nggqda24q',
-      redirectUri: `${window.location.origin}${window.location.pathname}`
+      redirectUri: `${appOrigin}${canonicalBeforePath}`
     };
 
-    oauthHelp.innerHTML = `
-      <strong>Configuration requise :</strong> ajoute ton Client ID Google et ton Client ID Twitch dans le script.<br>
-      URL de redirection a mettre dans Google et Twitch :<br>
-      <span class="auth-uri">${oauthConfig.redirectUri}</span>
-    `;
+    function getOAuthFlowState() {
+      try {
+        const rawFlow = window.localStorage.getItem(oauthFlowStateKey);
+        return rawFlow ? JSON.parse(rawFlow) : null;
+      } catch (e) {
+        return null;
+      }
+    }
 
     try {
       const storedUser = window.localStorage.getItem(authStorageKey);
@@ -507,14 +595,53 @@
       refreshText();
     }
 
+    function renderAuthBox() {
+      if (isAuthenticated()) {
+        authBox.innerHTML = `
+          <div class="auth-actions">
+            <button id="logoutBtn" type="button" class="auth-btn">Se deconnecter</button>
+          </div>
+        `;
+      } else {
+        authBox.innerHTML = `
+          <p id="authStatus" class="auth-status" aria-live="polite"></p>
+          <div class="auth-actions">
+            <button id="googleLogin" type="button" class="auth-btn">Connexion Google</button>
+            <button id="twitchLogin" type="button" class="auth-btn">Connexion Twitch</button>
+          </div>
+        `;
+      }
+
+      authStatus = document.getElementById('authStatus');
+      googleLogin = document.getElementById('googleLogin');
+      twitchLogin = document.getElementById('twitchLogin');
+      logoutBtn = document.getElementById('logoutBtn');
+
+      if (googleLogin) googleLogin.onclick = startGoogleLogin;
+      if (twitchLogin) twitchLogin.onclick = startTwitchLogin;
+      if (logoutBtn) {
+        logoutBtn.onclick = () => {
+          setAuthUser(null);
+          updateAuthUi();
+        };
+      }
+    }
+
     function updateAuthUi() {
       const connected = isAuthenticated();
+      renderAuthBox();
       textArea.disabled = !connected;
       publishMessageBtn.disabled = !connected;
-      if (connected) {
-        authStatus.textContent = `Connecte(e) avec ${authUser.provider} : ${authUser.name}`;
-      } else {
-        authStatus.textContent = 'Connecte-toi avec Google ou Twitch pour publier un message.';
+    }
+
+    function showAuthNotice(message) {
+      if (oauthFeedback) {
+        oauthFeedback.textContent = message;
+        oauthFeedback.style.display = 'block';
+      }
+
+      if (authStatus) {
+        authStatus.textContent = message;
       }
     }
 
@@ -524,6 +651,49 @@
 
     function buildQuery(params) {
       return new URLSearchParams(params).toString();
+    }
+
+    async function completeOAuthFromHash(hash) {
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get('access_token');
+      const returnedState = hashParams.get('state');
+      const oauthError = hashParams.get('error');
+
+      if (!accessToken && !oauthError) {
+        return false;
+      }
+
+      const flow = getOAuthFlowState();
+      window.localStorage.removeItem(oauthFlowStateKey);
+
+      if (oauthError) {
+        showAuthNotice('Connexion annulee ou refusee.');
+        return true;
+      }
+
+      if (!flow || flow.state !== returnedState) {
+        showAuthNotice('Connexion impossible: etat OAuth invalide.');
+        return true;
+      }
+
+      try {
+        if (flow.provider === 'google') {
+          const user = await fetchGoogleProfile(accessToken);
+          setAuthUser(user);
+          showAuthNotice(`Connecte(e) avec Google : ${user.name}`);
+        } else if (flow.provider === 'twitch') {
+          const user = await fetchTwitchProfile(accessToken);
+          setAuthUser(user);
+          showAuthNotice(`Connecte(e) avec Twitch : ${user.name}`);
+        }
+        clearOAuthPending();
+      } catch (e) {
+        showAuthNotice('Connexion impossible, reessaie ou verifie la configuration du compte.');
+      } finally {
+        updateAuthUi();
+      }
+
+      return true;
     }
 
     function clearOAuthParamsFromUrl() {
@@ -563,12 +733,17 @@
 
     function startGoogleLogin() {
       if (!oauthConfig.googleClientId) {
-        authStatus.textContent = 'Google non configure: ajoute googleClientId dans le script.';
+        showAuthNotice('Connexion Google indisponible.');
         return;
       }
 
       const state = createOauthState();
-      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({ provider: 'google', state }));
+      setOAuthPending('google');
+      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
+        provider: 'google',
+        state,
+        returnPath: canonicalBeforePath
+      }));
       const url = `https://accounts.google.com/o/oauth2/v2/auth?${buildQuery({
         client_id: oauthConfig.googleClientId,
         redirect_uri: oauthConfig.redirectUri,
@@ -577,17 +752,23 @@
         prompt: 'select_account',
         state
       })}`;
+      showAuthNotice('Connexion Google en cours...');
       window.location.href = url;
     }
 
     function startTwitchLogin() {
       if (!oauthConfig.twitchClientId) {
-        authStatus.textContent = 'Twitch non configure: ajoute twitchClientId dans le script.';
+        showAuthNotice('Connexion Twitch indisponible.');
         return;
       }
 
       const state = createOauthState();
-      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({ provider: 'twitch', state }));
+      setOAuthPending('twitch');
+      window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
+        provider: 'twitch',
+        state,
+        returnPath: canonicalBeforePath
+      }));
       const url = `https://id.twitch.tv/oauth2/authorize?${buildQuery({
         client_id: oauthConfig.twitchClientId,
         redirect_uri: oauthConfig.redirectUri,
@@ -596,61 +777,36 @@
         force_verify: 'true',
         state
       })}`;
+      showAuthNotice('Connexion Twitch en cours...');
       window.location.href = url;
     }
 
     async function handleOAuthCallbackIfPresent() {
       const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
-      if (!hash) return;
+      const search = new URLSearchParams(window.location.search);
+      const hasQueryOAuth = search.has('code') || search.has('error');
 
-      const hashParams = new URLSearchParams(hash);
-      const accessToken = hashParams.get('access_token');
-      const returnedState = hashParams.get('state');
-      const oauthError = hashParams.get('error');
-      if (!accessToken && !oauthError) return;
-
-      let flow = null;
-      try {
-        const rawFlow = window.localStorage.getItem(oauthFlowStateKey);
-        flow = rawFlow ? JSON.parse(rawFlow) : null;
-      } catch (e) {
-        flow = null;
-      }
-      window.localStorage.removeItem(oauthFlowStateKey);
-
-      if (oauthError) {
-        authStatus.textContent = 'Connexion annulee ou refusee.';
-        clearOAuthParamsFromUrl();
+      if (!hash && !hasQueryOAuth) {
+        isHandlingOAuthCallback = false;
         return;
       }
 
-      if (!flow || flow.state !== returnedState) {
-        authStatus.textContent = 'Erreur de securite OAuth (state invalide).';
-        clearOAuthParamsFromUrl();
-        return;
-      }
-
-      try {
-        if (flow.provider === 'google') {
-          const user = await fetchGoogleProfile(accessToken);
-          setAuthUser(user);
-        } else if (flow.provider === 'twitch') {
-          const user = await fetchTwitchProfile(accessToken);
-          setAuthUser(user);
+      if (hash) {
+        if (await completeOAuthFromHash(hash)) {
+          clearOAuthParamsFromUrl();
         }
-      } catch (e) {
-        authStatus.textContent = 'Connexion impossible, verifie les IDs OAuth.';
-      } finally {
+      } else if (hasQueryOAuth) {
+        // Some OAuth providers can return query params instead of hash.
+        // Keep user on this page and avoid countdown auto-redirect in this case.
+        showAuthNotice('Connexion en cours, retour OAuth detecte.');
+        clearOAuthPending();
         clearOAuthParamsFromUrl();
       }
+
+      isHandlingOAuthCallback = false;
+      updateCountdown();
     }
 
-    googleLogin.addEventListener('click', startGoogleLogin);
-    twitchLogin.addEventListener('click', startTwitchLogin);
-
-    logoutBtn.addEventListener('click', () => {
-      setAuthUser(null);
-    });
     try {
       const storedMessages = window.localStorage.getItem(supportMessagesStorageKey);
       supportMessages = storedMessages ? JSON.parse(storedMessages) : [];
@@ -743,6 +899,7 @@
     });
 
     (async () => {
+      await loadSharedCountdownConfig();
       await handleOAuthCallbackIfPresent();
       updateAuthUi();
       refreshText();

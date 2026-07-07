@@ -4,6 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Donathon</title>
+  <script>
+    (function redirectOAuthCallbackToBeforePage() {
+      const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+      if (!hash || (!hash.includes('access_token=') && !hash.includes('error='))) {
+        return;
+      }
+
+      try {
+        const rawFlow = window.localStorage.getItem('redebut-oauth-flow-v2');
+        const flow = rawFlow ? JSON.parse(rawFlow) : null;
+        const returnPath = flow && flow.returnPath ? flow.returnPath : '../avant-compteur.html';
+        const destination = `${window.location.origin}${returnPath}#${hash}`;
+        window.location.replace(destination);
+      } catch (e) {
+        const fallbackPath = new URL('../avant-compteur.html', window.location.href);
+        const fallback = `${fallbackPath.origin}${fallbackPath.pathname}#${hash}`;
+        window.location.replace(fallback);
+      }
+    })();
+  </script>
   <style>
     body {
       font-family: "Segoe UI", Arial, sans-serif;
