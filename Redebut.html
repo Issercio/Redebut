@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donathon</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #f8f5ff 0%, #eef2ff 45%, #fdf2f8 100%);
+      color: #222;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .page-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .bg-img {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(248, 245, 255, 0.2), rgba(248, 245, 255, 0.2)), url('assets/Torii.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-color: #f7f1ff;
+      opacity: 0.95;
+      filter: saturate(1.05) contrast(1.02);
+    }
+
+    .bg-img::before {
+      left: 0;
+    }
+
+    .bg-img::after {
+      right: 0;
+    }
+
+    .hero {
+      margin: 0 0 28px;
+      position: relative;
+      z-index: 2;
+      background: rgba(255,255,255,0.96);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+      border: 1px solid rgba(124, 58, 237, 0.12);
+    }
+
+    .hero img {
+      width: 100%;
+      height: 440px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-content {
+      padding: 30px 34px 34px;
+    }
+
+    .hero-content h1 {
+      margin: 0 0 10px;
+      color: #7c3aed;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .hero-content p {
+      margin: 0 0 20px;
+      color: #3f4658;
+      line-height: 1.8;
+      font-size: 16px;
+      max-width: 760px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-donate {
+      background: linear-gradient(135deg, #ec4899, #db2777);
+      color: white;
+      box-shadow: 0 8px 18px rgba(236, 72, 153, 0.2);
+    }
+
+    .btn-video {
+      background: #eef2ff;
+      color: #4338ca;
+      border: 1px solid #c7d2fe;
+    }
+
+    .video-card {
+      margin-top: 20px;
+      padding: 16px;
+      background: #faf7ff;
+      border: 1px solid #ece7ff;
+      border-radius: 16px;
+      scroll-margin-top: 24px;
+    }
+
+    .video-card p {
+      margin: 0 0 10px;
+      color: #6d28d9;
+      font-weight: 700;
+    }
+
+    .video-card video {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+      background: #000;
+    }
+
+    .goals-section {
+      margin: 0;
+      padding: 28px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 24px;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.08);
+      border: 1px solid rgba(124, 58, 237, 0.12);
+      backdrop-filter: blur(8px);
+      position: relative;
+      z-index: 2;
+    }
+
+    .goals-section h2 {
+      margin: 0 0 18px;
+      color: #222;
+      font-size: 28px;
+      text-align: left;
+    }
+
+    .goal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .goal-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #ece7ff;
+      position: relative;
+      z-index: 2;
+    }
+
+    .goal-card strong {
+      display: block;
+      margin-bottom: 10px;
+      color: #7c3aed;
+      font-size: 18px;
+    }
+
+    .goal-card p {
+      margin: 0;
+      color: #4b5563;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .goal-note {
+      margin: 0 0 24px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #fff7fb, #fdf2f8);
+      border: 1px solid #f3d6ec;
+      border-left: 4px solid #ec4899;
+      border-radius: 16px;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.8;
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.06);
+      position: relative;
+      z-index: 2;
+    }
+
+    .goal-note p {
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .goal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-img" aria-hidden="true"></div>
+  <main class="page-shell">
+    <div class="hero">
+      <img src="MiyuYume.png" alt="Miyu Yumé" />
+      <div class="hero-content">
+        <h1>Un nouveau voyage</h1>
+        <p>Chaque voyage commence par un premier pas...<br>
+Après une longue aventure, un nouveau chapitre s'apprête à s'ouvrir.<br>
+Pour célébrer mes débuts sous un nom ainsi que l'arrivée de mon nouveau modèle, un Donathon aura lieu prochainement ! 🌸</p>
+        <div class="buttons">
+          <a href="https://ko-fi.com/princessekitsune" target="_blank" rel="noopener noreferrer" class="btn btn-donate">Faire un don</a>
+          <a href="video.html" class="btn btn-video">Voir la vidéo</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="goals-section">
+      <h2>Objectifs du donathon</h2>
+      <div class="goal-note">
+        <p>✨ Tous les 50€ votre nom est présent sur l'overlay du live.<br>
+        🎨 Tous les 10€ un petit croquis.</p>
+      </div>
+      <div class="goal-grid">
+      <div class="goal-card">
+        <strong>100€</strong>
+        <p>✏️ Je fais un live dessins où je fais vos idées (interdit délire chelou).</p>
+      </div>
+      <div class="goal-card">
+        <strong>200€</strong>
+        <p>🎮 Je joue à Resident Evil en VR en full immersion dans le noir.</p>
+      </div>
+      <div class="goal-card">
+        <strong>300€</strong>
+        <p>🪓 Je fais une gravure en référence à votre PP Discord ou image de votre choix.</p>
+      </div>
+      <div class="goal-card">
+        <strong>400€</strong>
+        <p>🗣️ Je dois finir toutes mes phrases par "Mambo".</p>
+      </div>
+      <div class="goal-card">
+        <strong>500€</strong>
+        <p>🇬🇧 Je mets tous mes jeux en anglais jusqu'à la fin du donathon.</p>
+      </div>
+      <div class="goal-card">
+        <strong>600€</strong>
+        <p>🤝 Je fais un jeu coop en RP soit avec Issercio soit Lou ou les deux.</p>
+      </div>
+      <div class="goal-card">
+        <strong>700€</strong>
+        <p>🎭 Je fais un live doublage en étant RP dans le personnage durant tout le live.</p>
+      </div>
+      <div class="goal-card">
+        <strong>800€</strong>
+        <p>⚡ J'apprends un speedrun d'un jeu.</p>
+      </div>
+      <div class="goal-card">
+        <strong>900€</strong>
+        <p>👻 Je fais un live 12H que sur des jeux d'horreur.</p>
+      </div>
+      <div class="goal-card">
+        <strong>1000€</strong>
+        <p>🎤 Je fais un live karaoké pour votre plus grand plaisir.</p>
+      </div>
+      <div class="goal-card">
+        <strong>2000€</strong>
+        <p>🧟 Je fais tous les Outlast en un seul live (15h de jeux).</p>
+      </div>
+      <div class="goal-card">
+        <strong>3000€</strong>
+        <p>⚔️ Je lance un jeu Total War.</p>
+      </div>
+      <div class="goal-card">
+        <strong>4000€</strong>
+        <p>⏰ Live 24h.</p>
+      </div>
+      <div class="goal-card">
+        <strong>4999€</strong>
+        <p>💻 J'installe Valorant.</p>
+      </div>
+      <div class="goal-card">
+        <strong>5000€</strong>
+        <p>🕹️ Je lance League of Legends pour la première fois.</p>
+      </div>
+      <div class="goal-card">
+        <strong>1 000 000€</strong>
+        <p>🏝️ Je quitte Twitch pour partir à Malte.</p>
+      </div>
+    </div>
+    </section>
+  </main>
+</body>
+</html>
