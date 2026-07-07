@@ -7,6 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Un nouveau chapitre</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body {
       margin: 0;
@@ -402,7 +403,7 @@
   </div>
 
   <script>
-    const canonicalBeforePath = window.location.pathname;
+    const canonicalBeforePath = '/avant-compteur.html';
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
     const forcedCachePurgeVersion = 'v1';
@@ -424,60 +425,11 @@
     const countdownConfigUrl = './countdown-config.json';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
-    const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const oauthFeedback = document.getElementById('oauthFeedback');
-    const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
-    const initialSearch = new URLSearchParams(window.location.search);
-    const initialHasQueryOAuth = initialSearch.has('code') || initialSearch.has('error');
-    let isHandlingOAuthCallback = initialHash.includes('access_token=') || initialHash.includes('error=') || initialHasQueryOAuth;
     let countdownResetVersion = 'v12';
     let countdownDurationMs = 60 * 60 * 1000;
     const storedTargetDate = window.localStorage.getItem(countdownStorageKey);
     let targetDate = storedTargetDate ? new Date(storedTargetDate) : new Date(Date.now() + countdownDurationMs);
-
-    function getOAuthPending() {
-      try {
-        const raw = window.localStorage.getItem(oauthPendingStorageKey);
-        const pending = raw ? JSON.parse(raw) : null;
-        if (!pending || !pending.startedAt) {
-          return null;
-        }
-
-        if (Date.now() - pending.startedAt > 10 * 60 * 1000) {
-          window.localStorage.removeItem(oauthPendingStorageKey);
-          return null;
-        }
-
-        return pending;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function hasActiveOAuthPending() {
-      return Boolean(getOAuthPending());
-    }
-
-    function setOAuthPending(provider) {
-      window.localStorage.setItem(oauthPendingStorageKey, JSON.stringify({
-        provider,
-        startedAt: Date.now(),
-        returnPath: canonicalBeforePath
-      }));
-      isHandlingOAuthCallback = true;
-    }
-
-    function clearOAuthPending() {
-      window.localStorage.removeItem(oauthPendingStorageKey);
-    }
-
-    if (hasActiveOAuthPending()) {
-      isHandlingOAuthCallback = true;
-      if (oauthFeedback) {
-        oauthFeedback.textContent = 'Connexion en cours, retour de Twitch/Google en attente...';
-        oauthFeedback.style.display = 'block';
-      }
-    }
 
     let countdownIntervalId = null;
 
@@ -561,8 +513,23 @@
     const oauthConfig = {
       googleClientId: '691290989737-hljsc29mhbk1kbcjjb7seiu0fderb0ev.apps.googleusercontent.com',
       twitchClientId: '28pgpqe8sa8y0iowuipn2nggqda24q',
-      redirectUri: `${appOrigin}${canonicalBeforePath}`
+      googleRedirectUri: `${productionOrigin}${canonicalBeforePath}`,
+      twitchRedirectUri: `${productionOrigin}${canonicalBeforePath}`
     };
+
+    function ensureValidAuthOrigin() {
+      const isFileOrigin = window.location.protocol === 'file:';
+      const isWrongWebOrigin = !isFileOrigin && window.location.origin !== productionOrigin;
+
+      if (!isFileOrigin && !isWrongWebOrigin) {
+        return true;
+      }
+
+      const destination = `${productionOrigin}${canonicalBeforePath}`;
+      showAuthNotice(`Connexion OAuth disponible uniquement sur ${destination}`);
+      window.location.href = destination;
+      return false;
+    }
 
     function getOAuthFlowState() {
       try {
@@ -686,7 +653,6 @@
           setAuthUser(user);
           showAuthNotice(`Connecte(e) avec Twitch : ${user.name}`);
         }
-        clearOAuthPending();
       } catch (e) {
         showAuthNotice('Connexion impossible, reessaie ou verifie la configuration du compte.');
       } finally {
@@ -737,8 +703,39 @@
         return;
       }
 
+      if (!ensureValidAuthOrigin()) {
+        return;
+      }
+
+      if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: oauthConfig.googleClientId,
+          scope: 'openid profile email',
+          prompt: 'select_account',
+          callback: async (response) => {
+            if (!response || !response.access_token) {
+              showAuthNotice('Connexion Google annulee.');
+              return;
+            }
+
+            try {
+              const user = await fetchGoogleProfile(response.access_token);
+              setAuthUser(user);
+              showAuthNotice(`Connecte(e) avec Google : ${user.name}`);
+            } catch (e) {
+              showAuthNotice('Connexion Google impossible.');
+            }
+          },
+          error_callback: () => {
+            showAuthNotice('Connexion Google impossible.');
+          }
+        });
+
+        tokenClient.requestAccessToken();
+        return;
+      }
+
       const state = createOauthState();
-      setOAuthPending('google');
       window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
         provider: 'google',
         state,
@@ -746,7 +743,7 @@
       }));
       const url = `https://accounts.google.com/o/oauth2/v2/auth?${buildQuery({
         client_id: oauthConfig.googleClientId,
-        redirect_uri: oauthConfig.redirectUri,
+        redirect_uri: oauthConfig.googleRedirectUri,
         response_type: 'token',
         scope: 'openid profile email',
         prompt: 'select_account',
@@ -762,8 +759,11 @@
         return;
       }
 
+      if (!ensureValidAuthOrigin()) {
+        return;
+      }
+
       const state = createOauthState();
-      setOAuthPending('twitch');
       window.localStorage.setItem(oauthFlowStateKey, JSON.stringify({
         provider: 'twitch',
         state,
@@ -771,7 +771,7 @@
       }));
       const url = `https://id.twitch.tv/oauth2/authorize?${buildQuery({
         client_id: oauthConfig.twitchClientId,
-        redirect_uri: oauthConfig.redirectUri,
+        redirect_uri: oauthConfig.twitchRedirectUri,
         response_type: 'token',
         scope: 'user:read:email',
         force_verify: 'true',
@@ -787,7 +787,6 @@
       const hasQueryOAuth = search.has('code') || search.has('error');
 
       if (!hash && !hasQueryOAuth) {
-        isHandlingOAuthCallback = false;
         return;
       }
 
@@ -799,11 +798,9 @@
         // Some OAuth providers can return query params instead of hash.
         // Keep user on this page and avoid countdown auto-redirect in this case.
         showAuthNotice('Connexion en cours, retour OAuth detecte.');
-        clearOAuthPending();
         clearOAuthParamsFromUrl();
       }
 
-      isHandlingOAuthCallback = false;
       updateCountdown();
     }
 
