@@ -481,6 +481,7 @@
       '/Redebut/countdown-config.json',
       '/countdown-config.json'
     ];
+    const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
     const nextPageHref = 'Apres compteur/Redebut.html';
@@ -637,7 +638,6 @@
     const authStorageKey = 'redebut-auth-user-v2';
     const authBox = document.getElementById('authBox');
     const oauthFlowStateKey = 'redebut-oauth-flow-v2';
-    const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
     const supportMessagesChannel = 'BroadcastChannel' in window ? new BroadcastChannel('redebut-support-messages-sync') : null;
     const runtimeSupabaseConfig = window.REDEBUT_SUPABASE_CONFIG || {};
     const configuredCooldownSeconds = Number(runtimeSupabaseConfig.publishCooldownSeconds);
