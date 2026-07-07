@@ -1114,6 +1114,7 @@
         redirect_uri: oauthConfig.twitchRedirectUri,
         response_type: 'token',
         scope: 'user:read:email',
+        force_verify: 'true',
         state
       })}`;
       showAuthNotice('Connexion Twitch en cours...');
