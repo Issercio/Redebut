@@ -259,6 +259,10 @@
       flex-wrap: wrap;
     }
 
+    .message-meta span {
+      color: #6b7280;
+    }
+
     .message-author {
       display: inline-flex;
       align-items: center;
@@ -1219,7 +1223,7 @@
       }
 
       if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
-        return messages;
+        return [];
       }
 
       return messages.filter((entry) => {
@@ -1257,6 +1261,12 @@
 
       let rows = [];
       const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
+      if (!hasRoundStart) {
+        supportMessages = [];
+        persistSupportMessages();
+        renderSupportMessages();
+        return;
+      }
       const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
