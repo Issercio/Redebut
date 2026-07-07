@@ -1082,6 +1082,20 @@
         clearOAuthParamsFromUrl();
       }
 
+      try {
+        await loadSharedCountdownConfig();
+      } catch (e) {
+        // Keep current countdown state if callback-time config refresh fails.
+      }
+
+      if (isCloudSyncEnabled) {
+        try {
+          await pullSupportMessagesFromSupabase();
+        } catch (e) {
+          // Keep current UI state if immediate post-login sync fails.
+        }
+      }
+
       updateCountdown();
     }
 
@@ -1124,10 +1138,32 @@
       });
     }
 
+    function ensureMessagesRoundStartMs() {
+      if (Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0) {
+        return;
+      }
+
+      const localTargetRaw = window.localStorage.getItem(countdownStorageKey);
+      const localTargetMs = localTargetRaw ? new Date(localTargetRaw).getTime() : NaN;
+      if (!Number.isFinite(localTargetMs) || localTargetMs <= 0) {
+        return;
+      }
+
+      const computedRoundStartMs = localTargetMs - countdownDurationMs;
+      if (!Number.isFinite(computedRoundStartMs) || computedRoundStartMs <= 0) {
+        return;
+      }
+
+      messagesRoundStartMs = computedRoundStartMs;
+      window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
+    }
+
     async function pullSupportMessagesFromSupabase() {
       if (!isCloudSyncEnabled) {
         return;
       }
+
+      ensureMessagesRoundStartMs();
 
       let rows = [];
       const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
