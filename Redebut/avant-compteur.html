@@ -1247,10 +1247,32 @@
     });
 
     (async () => {
-      await loadSharedCountdownConfig();
+      // Render core UI immediately so auth buttons are visible even if async setup fails.
+      updateAuthUi();
+      refreshText();
+      renderSupportMessages();
+
+      try {
+        await loadSharedCountdownConfig();
+      } catch (e) {
+        // Keep previously known countdown state on transient bootstrap errors.
+      }
+
       canAutoRedirect = true;
-      await handleOAuthCallbackIfPresent();
-      await setupRealtimeSupportMessages();
+      updateCountdown();
+
+      try {
+        await handleOAuthCallbackIfPresent();
+      } catch (e) {
+        showAuthNotice('Retour de connexion detecte mais incomplet.');
+      }
+
+      try {
+        await setupRealtimeSupportMessages();
+      } catch (e) {
+        showComposeNotice('Mode local actif. La synchro temps reel est indisponible.');
+      }
+
       updateAuthUi();
       refreshText();
       renderSupportMessages();
