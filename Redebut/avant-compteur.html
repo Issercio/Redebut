@@ -601,10 +601,22 @@
         window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
 
         if (previousResetVersion && previousResetVersion !== configResetVersion) {
+          const cacheKeysToClear = [
+            supportMessagesStorageKey,
+            messagesRoundStartStorageKey,
+            countdownRemainingStorageKey,
+            countdownStorageKey,
+            countdownVersionStorageKey
+          ];
+          cacheKeysToClear.forEach((key) => window.localStorage.removeItem(key));
+
           remainingMs = countdownDurationMs;
           window.localStorage.setItem(countdownRemainingStorageKey, String(remainingMs));
+          window.localStorage.setItem(countdownStorageKey, config.targetDate);
+          window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
+
           supportMessages = [];
-          window.localStorage.removeItem(supportMessagesStorageKey);
+          cloudDisabledForSession = false;
           renderSupportMessages();
         }
 
@@ -664,6 +676,7 @@
       table: runtimeSupabaseConfig.table || 'support_messages',
       channel: 'redebut-support-messages-live-v1'
     };
+    const hasCloudConfig = Boolean(supabaseConfig.url && supabaseConfig.anonKey);
 
     let supportMessages = [];
     let messagesRoundStartMs = Number(window.localStorage.getItem(messagesRoundStartStorageKey) || '0');
@@ -1363,8 +1376,16 @@
           return;
         } catch (e) {
           isCloudSyncEnabled = false;
-          showComposeNotice('Cloud indisponible. Message publie en mode local.');
+          showComposeNotice('Cloud indisponible. Message non publie, reessaie.');
+          publishMessageBtn.disabled = !isAuthenticated();
+          return;
         }
+      }
+
+      if (hasCloudConfig) {
+        showComposeNotice('Cloud configure: envoi local bloque pour garder Google/Twitch synchronises.');
+        publishMessageBtn.disabled = !isAuthenticated();
+        return;
       }
 
       supportMessages.push({
