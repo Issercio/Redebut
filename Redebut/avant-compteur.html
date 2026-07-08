@@ -790,18 +790,7 @@
     }
 
     function syncFaviconWithAuthState() {
-      const pendingProvider = getPendingProvider();
-      if (pendingProvider && providerFaviconMap[pendingProvider]) {
-        setPageFavicon(providerFaviconMap[pendingProvider]);
-        return;
-      }
-
-      const authProvider = normalizeProvider(authUser && authUser.provider);
-      if (authProvider && providerFaviconMap[authProvider]) {
-        setPageFavicon(providerFaviconMap[authProvider]);
-        return;
-      }
-
+      // Keep a single brand favicon regardless of OAuth provider.
       setPageFavicon(defaultFaviconHref);
     }
 
@@ -952,6 +941,12 @@
       syncFaviconWithAuthState();
       updateAuthUi();
       refreshText();
+
+      if (user && isCloudSyncEnabled) {
+        pullSupportMessagesFromSupabase().catch(() => {
+          // Keep current messages if immediate post-login refresh fails.
+        });
+      }
     }
 
     function renderAuthBox() {
@@ -1297,7 +1292,7 @@
       }
 
       if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
-        return [];
+        return messages;
       }
 
       return messages.filter((entry) => {
@@ -1336,8 +1331,7 @@
       let rows = [];
       const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
       if (!hasRoundStart) {
-        supportMessages = [];
-        persistSupportMessages();
+        // Preserve currently loaded messages until round start is available.
         renderSupportMessages();
         return;
       }
