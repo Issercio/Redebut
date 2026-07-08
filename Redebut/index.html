@@ -15,7 +15,16 @@
     }
     setEntryFavicon('./Apres%20compteur/assets/Kitsune_Favicon.jpg');
 
-    const redirectUrl = `./avant-compteur.html?v=${Date.now()}`;
+    const hashPayload = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+    const queryPayload = new URLSearchParams(window.location.search);
+    const hasOAuthPayload = hashPayload.includes('access_token=')
+      || hashPayload.includes('error=')
+      || queryPayload.has('code')
+      || queryPayload.has('error');
+
+    const redirectUrl = hasOAuthPayload
+      ? `./avant-compteur.html${window.location.search}${window.location.hash}`
+      : `./avant-compteur.html?v=${Date.now()}`;
     window.location.replace(redirectUrl);
   </script>
 </head>

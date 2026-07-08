@@ -8,7 +8,11 @@
   <script>
     (function redirectOAuthCallbackToBeforePage() {
       const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
-      if (!hash || (!hash.includes('access_token=') && !hash.includes('error='))) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hasHashOAuth = hash.includes('access_token=') || hash.includes('error=');
+      const hasQueryOAuth = searchParams.has('code') || searchParams.has('error');
+
+      if (!hasHashOAuth && !hasQueryOAuth) {
         return;
       }
 
@@ -17,11 +21,15 @@
         const flow = rawFlow ? JSON.parse(rawFlow) : null;
         const returnPath = flow && flow.returnPath ? flow.returnPath : '../avant-compteur.html';
         const destinationUrl = new URL(returnPath, window.location.origin);
-        const destination = `${destinationUrl.origin}${destinationUrl.pathname}#${hash}`;
+        const hashPart = hasHashOAuth ? `#${hash}` : '';
+        const queryPart = hasQueryOAuth ? window.location.search : '';
+        const destination = `${destinationUrl.origin}${destinationUrl.pathname}${queryPart}${hashPart}`;
         window.location.replace(destination);
       } catch (e) {
         const fallbackPath = new URL('../avant-compteur.html', window.location.href);
-        const fallback = `${fallbackPath.origin}${fallbackPath.pathname}#${hash}`;
+        const hashPart = hasHashOAuth ? `#${hash}` : '';
+        const queryPart = hasQueryOAuth ? window.location.search : '';
+        const fallback = `${fallbackPath.origin}${fallbackPath.pathname}${queryPart}${hashPart}`;
         window.location.replace(fallback);
       }
     })();
