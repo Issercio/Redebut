@@ -1060,6 +1060,71 @@
       return new URLSearchParams(params).toString();
     }
 
+    async function consumeOAuthCallbackPayload(hashPayload, hasQueryOAuth) {
+      if (hashPayload) {
+        const normalizedHash = hashPayload.startsWith('#') ? hashPayload.slice(1) : hashPayload;
+        if (await completeOAuthFromHash(normalizedHash)) {
+          clearOAuthParamsFromUrl();
+        }
+      } else if (hasQueryOAuth) {
+        showAuthNotice('Connexion en cours, retour OAuth detecte.');
+        clearOAuthPending();
+        clearOAuthParamsFromUrl();
+      }
+
+      try {
+        await loadSharedCountdownConfig();
+      } catch (e) {
+        // Keep current countdown state if callback-time config refresh fails.
+      }
+
+      if (isCloudSyncEnabled) {
+        try {
+          await pullSupportMessagesFromSupabase();
+        } catch (e) {
+          // Keep current UI state if immediate post-login sync fails.
+        }
+      }
+
+      updateCountdown();
+    }
+
+    function relayOAuthCallbackToOpenerIfNeeded(hashPayload, hasQueryOAuth) {
+      if (!window.opener || (!hashPayload && !hasQueryOAuth)) {
+        return false;
+      }
+
+      try {
+        window.opener.postMessage({
+          type: 'redebut-oauth-callback',
+          hash: hashPayload || '',
+          search: window.location.search || ''
+        }, '*');
+      } catch (e) {
+        return false;
+      }
+
+      window.setTimeout(() => {
+        window.close();
+      }, 30);
+      return true;
+    }
+
+    window.addEventListener('message', (event) => {
+      const payload = event.data;
+      if (!payload || payload.type !== 'redebut-oauth-callback') {
+        return;
+      }
+
+      const incomingHash = typeof payload.hash === 'string' ? payload.hash : '';
+      const incomingSearch = new URLSearchParams(typeof payload.search === 'string' ? payload.search : '');
+      const hasQueryOAuth = incomingSearch.has('code') || incomingSearch.has('error');
+
+      consumeOAuthCallbackPayload(incomingHash, hasQueryOAuth).catch(() => {
+        showAuthNotice('Retour de connexion detecte mais incomplet.');
+      });
+    });
+
     async function completeOAuthFromHash(hash) {
       const hashParams = new URLSearchParams(hash);
       const accessToken = hashParams.get('access_token');
@@ -1224,6 +1289,18 @@
         state
       })}`;
       showAuthNotice('Connexion en cours...');
+
+      const popup = window.open(
+        url,
+        'redebut_twitch_oauth',
+        'popup=yes,width=540,height=720,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes'
+      );
+
+      if (popup) {
+        popup.focus();
+        return;
+      }
+
       try {
         window.location.href = url;
       } catch (e) {
@@ -1236,37 +1313,14 @@
       const search = new URLSearchParams(window.location.search);
       const hasQueryOAuth = search.has('code') || search.has('error');
 
-      if (!hash && !hasQueryOAuth) {
+      if (relayOAuthCallbackToOpenerIfNeeded(hash, hasQueryOAuth)) {
         return;
       }
 
-      if (hash) {
-        if (await completeOAuthFromHash(hash)) {
-          clearOAuthParamsFromUrl();
-        }
-      } else if (hasQueryOAuth) {
-        // Some OAuth providers can return query params instead of hash.
-        // Keep user on this page and avoid countdown auto-redirect in this case.
-        showAuthNotice('Connexion en cours, retour OAuth detecte.');
-        clearOAuthPending();
-        clearOAuthParamsFromUrl();
+      if (!hash && !hasQueryOAuth) {
+        return;
       }
-
-      try {
-        await loadSharedCountdownConfig();
-      } catch (e) {
-        // Keep current countdown state if callback-time config refresh fails.
-      }
-
-      if (isCloudSyncEnabled) {
-        try {
-          await pullSupportMessagesFromSupabase();
-        } catch (e) {
-          // Keep current UI state if immediate post-login sync fails.
-        }
-      }
-
-      updateCountdown();
+      await consumeOAuthCallbackPayload(hash, hasQueryOAuth);
     }
 
     supportMessages = [];
