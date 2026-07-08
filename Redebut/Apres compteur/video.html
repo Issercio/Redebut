@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mon aventure</title>
+  <title>Ma nouvelle aventure</title>
   <link rel="icon" type="image/jpeg" href="./assets/Kitsune_Favicon.jpg" />
   <style>
     body {
@@ -87,11 +87,11 @@
 </head>
 <body>
   <div class="page">
-    <h1>Mon aventure</h1>
-    <p class="intro">Regarde cette vidéo et découvre un peu plus de mon parcours.</p>
+    <h1>Ma nouvelle aventure</h1>
+    <p class="intro">Découvre mon nouveau modèle: une version plus expressive, plus vivante, et pensée pour offrir une meilleure expérience en stream.</p>
 
     <div class="video-box">
-      <video controls preload="metadata" playsinline>
+      <video controls preload="metadata" playsinline controlslist="nodownload noplaybackrate" disablepictureinpicture disableremoteplayback oncontextmenu="return false;">
         <source src="tout%20les%20models.mp4" type="video/mp4" />
         Votre navigateur ne prend pas en charge la lecture de vidéos.
       </video>
@@ -103,7 +103,23 @@
     </div>
 
     <a class="don-link" href="https://ko-fi.com/princessekitsune" target="_blank" rel="noopener noreferrer">Faire un don</a>
-    <a class="back-link" href="Redebut.html">← Retour à la page principale</a>
+    <a class="back-link" href="Redebut.html">← Voir les donation goals</a>
   </div>
+
+  <script>
+    // Deter common browser download actions on MP4 elements.
+    document.querySelectorAll('video').forEach((videoEl) => {
+      videoEl.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+      });
+
+      videoEl.addEventListener('keydown', (event) => {
+        const key = (event.key || '').toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u')) {
+          event.preventDefault();
+        }
+      });
+    });
+  </script>
 </body>
 </html>

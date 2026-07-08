@@ -483,7 +483,7 @@
         <div id="videoFrame" class="video-frame">
           <div class="video-card">
             <p>Mon aventure</p>
-            <video controls preload="metadata" playsinline>
+            <video controls preload="metadata" playsinline controlslist="nodownload noplaybackrate" disablepictureinpicture disableremoteplayback oncontextmenu="return false;">
               <source src="Apres compteur/tout%20les%20models.mp4" type="video/mp4" />
               Votre navigateur ne prend pas en charge la lecture de vidéos.
             </video>
@@ -1757,6 +1757,20 @@
 
     const bgImg = document.getElementById('bgImg');
     bgImg.style.backgroundImage = 'none';
+
+    // Deter common browser download actions on MP4 elements.
+    document.querySelectorAll('video').forEach((videoEl) => {
+      videoEl.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+      });
+
+      videoEl.addEventListener('keydown', (event) => {
+        const key = (event.key || '').toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u')) {
+          event.preventDefault();
+        }
+      });
+    });
 
     let audioContext;
     let masterGain;
