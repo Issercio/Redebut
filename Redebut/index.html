@@ -7,55 +7,13 @@
   <link rel="icon" type="image/jpeg" href="./Apres%20compteur/assets/Kitsune_Favicon.jpg" />
   <meta http-equiv="refresh" content="0; url=./avant-compteur.html" />
   <script>
-    const defaultFaviconHref = './Apres%20compteur/assets/Kitsune_Favicon.jpg';
-    const providerFaviconMap = {
-      google: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-      twitch: 'https://www.twitch.tv/favicon.ico'
-    };
-
-    function normalizeProvider(value) {
-      return String(value || '').trim().toLowerCase();
-    }
-
     function setEntryFavicon(href) {
       const favicon = document.querySelector("link[rel='icon']");
       if (favicon) {
-        favicon.href = href || defaultFaviconHref;
+        favicon.href = href || './Apres%20compteur/assets/Kitsune_Favicon.jpg';
       }
     }
-
-    function readPendingProvider() {
-      try {
-        const raw = window.localStorage.getItem('redebut-oauth-pending-v1') || window.sessionStorage.getItem('redebut-oauth-pending-v1');
-        if (!raw) {
-          return '';
-        }
-
-        const parsed = JSON.parse(raw);
-        return normalizeProvider(parsed && parsed.provider);
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function readAuthProvider() {
-      try {
-        const raw = window.localStorage.getItem('redebut-auth-user-v2');
-        if (!raw) {
-          return '';
-        }
-
-        const parsed = JSON.parse(raw);
-        return normalizeProvider(parsed && parsed.provider);
-      } catch (e) {
-        return '';
-      }
-    }
-
-    const pendingProvider = readPendingProvider();
-    const authProvider = readAuthProvider();
-    const faviconHref = providerFaviconMap[pendingProvider] || providerFaviconMap[authProvider] || defaultFaviconHref;
-    setEntryFavicon(faviconHref);
+    setEntryFavicon('./Apres%20compteur/assets/Kitsune_Favicon.jpg');
 
     const redirectUrl = `./avant-compteur.html?v=${Date.now()}`;
     window.location.replace(redirectUrl);

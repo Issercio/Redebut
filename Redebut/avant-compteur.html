@@ -192,14 +192,10 @@
       background: #f9fafb;
     }
 
-    .auth-btn-google {
+    .auth-btn-google,
+    .auth-btn-twitch {
       border-color: #d6e2ff;
       background: #f8fbff;
-    }
-
-    .auth-btn-twitch {
-      border-color: #d6c8ff;
-      background: #faf7ff;
     }
 
     .auth-logo {
@@ -483,7 +479,7 @@
         <div id="videoFrame" class="video-frame">
           <div class="video-card">
             <p>Mon aventure</p>
-            <video controls preload="metadata" playsinline controlslist="nodownload noplaybackrate" disablepictureinpicture disableremoteplayback oncontextmenu="return false;">
+            <video controls preload="metadata" playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture disableremoteplayback oncontextmenu="return false;" ondragstart="return false;">
               <source src="Apres compteur/tout%20les%20models.mp4" type="video/mp4" />
               Votre navigateur ne prend pas en charge la lecture de vidéos.
             </video>
@@ -801,18 +797,7 @@
     }
 
     function syncFaviconWithAuthState() {
-      const pendingProvider = getPendingProvider();
-      if (pendingProvider && providerFaviconMap[pendingProvider]) {
-        setPageFavicon(providerFaviconMap[pendingProvider]);
-        return;
-      }
-
-      const authProvider = normalizeProvider(authUser && authUser.provider);
-      if (authProvider && providerFaviconMap[authProvider]) {
-        setPageFavicon(providerFaviconMap[authProvider]);
-        return;
-      }
-
+      // Keep the brand favicon fixed across Google/Twitch auth flows.
       setPageFavicon(defaultFaviconHref);
     }
 
@@ -983,7 +968,7 @@
           <p id="authStatus" class="auth-status" aria-live="polite"></p>
           <div class="auth-actions">
             <button id="googleLogin" type="button" class="auth-btn auth-btn-google"><img class="auth-logo" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" aria-hidden="true" />Connexion Google</button>
-            <button id="twitchLogin" type="button" class="auth-btn auth-btn-twitch"><img class="auth-logo" src="https://www.twitch.tv/favicon.ico" alt="" aria-hidden="true" />Connexion Twitch</button>
+            <button id="twitchLogin" type="button" class="auth-btn auth-btn-google"><img class="auth-logo" src="https://www.twitch.tv/favicon.ico" alt="" aria-hidden="true" />Connexion Twitch</button>
           </div>
         `;
       }
@@ -1153,7 +1138,7 @@
 
     function startGoogleLogin() {
       if (!oauthConfig.googleClientId) {
-        showAuthNotice('Connexion Google indisponible.');
+        showAuthNotice('Connexion indisponible.');
         return;
       }
 
@@ -1170,7 +1155,7 @@
           callback: async (response) => {
             if (!response || !response.access_token) {
               clearOAuthPending();
-              showAuthNotice('Connexion Google annulee.');
+              showAuthNotice('Connexion annulee.');
               return;
             }
 
@@ -1179,14 +1164,14 @@
               setAuthUser(user);
               showAuthNotice(`Connecte(e) : ${user.name}`);
             } catch (e) {
-              showAuthNotice('Connexion Google impossible.');
+              showAuthNotice('Connexion impossible.');
             } finally {
               clearOAuthPending();
             }
           },
           error_callback: () => {
             clearOAuthPending();
-            showAuthNotice('Connexion Google impossible.');
+            showAuthNotice('Connexion impossible.');
           }
         });
 
@@ -1209,13 +1194,13 @@
         prompt: 'select_account',
         state
       })}`;
-      showAuthNotice('Connexion Google en cours...');
+      showAuthNotice('Connexion en cours...');
       window.location.href = url;
     }
 
     function startTwitchLogin() {
       if (!oauthConfig.twitchClientId) {
-        showAuthNotice('Connexion Twitch indisponible.');
+        showAuthNotice('Connexion indisponible.');
         return;
       }
 
@@ -1238,7 +1223,7 @@
         force_verify: 'true',
         state
       })}`;
-      showAuthNotice('Connexion Twitch en cours...');
+      showAuthNotice('Connexion en cours...');
       try {
         window.location.href = url;
       } catch (e) {
@@ -1780,9 +1765,19 @@
         event.preventDefault();
       });
 
+      videoEl.setAttribute('controlsList', 'nodownload noplaybackrate nofullscreen');
+      videoEl.setAttribute('disablePictureInPicture', 'true');
+      videoEl.setAttribute('disableRemotePlayback', 'true');
+
+      ['dragstart', 'copy', 'cut'].forEach((blockedEvent) => {
+        videoEl.addEventListener(blockedEvent, (event) => {
+          event.preventDefault();
+        });
+      });
+
       videoEl.addEventListener('keydown', (event) => {
         const key = (event.key || '').toLowerCase();
-        if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u')) {
+        if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u' || key === 'c')) {
           event.preventDefault();
         }
       });
