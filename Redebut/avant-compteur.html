@@ -660,14 +660,25 @@
         if (previousResetVersion && previousResetVersion !== configResetVersion) {
           const cacheKeysToClear = [
             supportMessagesStorageKey,
+            'redebut-support-messages-v2',
+            'redebut-support-messages-v3',
             messagesRoundStartStorageKey,
             countdownStorageKey,
-            countdownVersionStorageKey
+            countdownVersionStorageKey,
+            countdownDurationStorageKey,
+            lastPublishStorageKey
           ];
           cacheKeysToClear.forEach((key) => window.localStorage.removeItem(key));
+          try {
+            window.sessionStorage.removeItem(oauthPendingStorageKey);
+            window.sessionStorage.removeItem(oauthFlowStateKey);
+          } catch (e) {
+            // Ignore session storage cleanup errors.
+          }
 
           window.localStorage.setItem(countdownStorageKey, config.targetDate);
           window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
+          window.localStorage.setItem(countdownDurationStorageKey, String(countdownDurationMs));
 
           supportMessages = [];
           cloudDisabledForSession = false;
@@ -790,7 +801,18 @@
     }
 
     function syncFaviconWithAuthState() {
-      // Keep a single brand favicon regardless of OAuth provider.
+      const pendingProvider = getPendingProvider();
+      if (pendingProvider && providerFaviconMap[pendingProvider]) {
+        setPageFavicon(providerFaviconMap[pendingProvider]);
+        return;
+      }
+
+      const authProvider = normalizeProvider(authUser && authUser.provider);
+      if (authProvider && providerFaviconMap[authProvider]) {
+        setPageFavicon(providerFaviconMap[authProvider]);
+        return;
+      }
+
       setPageFavicon(defaultFaviconHref);
     }
 
@@ -1081,11 +1103,11 @@
         if (flow.provider === 'google') {
           const user = await fetchGoogleProfile(accessToken);
           setAuthUser(user);
-          showAuthNotice(`Connecte(e) avec Google : ${user.name}`);
+          showAuthNotice(`Connecte(e) : ${user.name}`);
         } else if (flow.provider === 'twitch') {
           const user = await fetchTwitchProfile(accessToken);
           setAuthUser(user);
-          showAuthNotice(`Connecte(e) avec Twitch : ${user.name}`);
+          showAuthNotice(`Connecte(e) : ${user.name}`);
         }
       } catch (e) {
         showAuthNotice('Connexion impossible, reessaie ou verifie la configuration du compte.');
@@ -1155,7 +1177,7 @@
             try {
               const user = await fetchGoogleProfile(response.access_token);
               setAuthUser(user);
-              showAuthNotice(`Connecte(e) avec Google : ${user.name}`);
+              showAuthNotice(`Connecte(e) : ${user.name}`);
             } catch (e) {
               showAuthNotice('Connexion Google impossible.');
             } finally {
