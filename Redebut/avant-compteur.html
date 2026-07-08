@@ -1067,7 +1067,7 @@
           clearOAuthParamsFromUrl();
         }
       } else if (hasQueryOAuth) {
-        showAuthNotice('Connexion en cours, retour OAuth detecte.');
+        showAuthNotice('');
         clearOAuthPending();
         clearOAuthParamsFromUrl();
       }
@@ -1259,7 +1259,7 @@
         prompt: 'select_account',
         state
       })}`;
-      showAuthNotice('Connexion en cours...');
+      showAuthNotice('');
       window.location.href = url;
     }
 
@@ -1288,7 +1288,7 @@
         force_verify: 'true',
         state
       })}`;
-      showAuthNotice('Connexion en cours...');
+      showAuthNotice('');
 
       const popup = window.open(
         url,
