@@ -494,7 +494,7 @@
     const canonicalBeforePath = window.location.protocol === 'file:' ? '/avant-compteur.html' : window.location.pathname;
     const productionOrigin = 'https://miyuyume.edgeone.dev';
     const appOrigin = window.location.protocol === 'file:' ? productionOrigin : window.location.origin;
-    const forcedCachePurgeVersion = 'v4';
+    const forcedCachePurgeVersion = 'v5';
     const forcedCachePurgeKey = `redebut-forced-cache-purge-${forcedCachePurgeVersion}`;
     const initialHash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
     const initialSearch = new URLSearchParams(window.location.search);
@@ -1060,6 +1060,11 @@
       return new URLSearchParams(params).toString();
     }
 
+    function isLikelyEmbeddedBrowser() {
+      const ua = navigator.userAgent || '';
+      return /Electron|wv\)|WebView|VSCode|Headless/i.test(ua);
+    }
+
     async function consumeOAuthCallbackPayload(hashPayload, hasQueryOAuth) {
       if (hashPayload) {
         const normalizedHash = hashPayload.startsWith('#') ? hashPayload.slice(1) : hashPayload;
@@ -1088,42 +1093,6 @@
 
       updateCountdown();
     }
-
-    function relayOAuthCallbackToOpenerIfNeeded(hashPayload, hasQueryOAuth) {
-      if (!window.opener || (!hashPayload && !hasQueryOAuth)) {
-        return false;
-      }
-
-      try {
-        window.opener.postMessage({
-          type: 'redebut-oauth-callback',
-          hash: hashPayload || '',
-          search: window.location.search || ''
-        }, '*');
-      } catch (e) {
-        return false;
-      }
-
-      window.setTimeout(() => {
-        window.close();
-      }, 30);
-      return true;
-    }
-
-    window.addEventListener('message', (event) => {
-      const payload = event.data;
-      if (!payload || payload.type !== 'redebut-oauth-callback') {
-        return;
-      }
-
-      const incomingHash = typeof payload.hash === 'string' ? payload.hash : '';
-      const incomingSearch = new URLSearchParams(typeof payload.search === 'string' ? payload.search : '');
-      const hasQueryOAuth = incomingSearch.has('code') || incomingSearch.has('error');
-
-      consumeOAuthCallbackPayload(incomingHash, hasQueryOAuth).catch(() => {
-        showAuthNotice('Retour de connexion detecte mais incomplet.');
-      });
-    });
 
     async function completeOAuthFromHash(hash) {
       const hashParams = new URLSearchParams(hash);
@@ -1264,6 +1233,10 @@
     }
 
     function startTwitchLogin() {
+      if (window.__twitchLoginInProgress) {
+        return;
+      }
+
       if (!oauthConfig.twitchClientId) {
         showAuthNotice('Connexion indisponible.');
         return;
@@ -1275,6 +1248,10 @@
 
       const state = createOauthState();
       setOAuthPending('twitch');
+      window.__twitchLoginInProgress = true;
+      if (twitchLogin) {
+        twitchLogin.disabled = true;
+      }
       setOAuthFlowState({
         provider: 'twitch',
         state,
@@ -1290,32 +1267,50 @@
       })}`;
       showAuthNotice('');
 
-      const popup = window.open(
-        url,
-        'redebut_twitch_oauth',
-        'popup=yes,width=540,height=720,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes'
-      );
+      if (isLikelyEmbeddedBrowser()) {
+        try {
+          navigator.clipboard.writeText(url);
+        } catch (e) {
+          // Ignore clipboard access failures.
+        }
 
-      if (popup) {
-        popup.focus();
+        showAuthNotice('Twitch bloque ce navigateur integre. Ouvre le lien dans Chrome/Edge/Firefox (copie deja prete).');
+      }
+
+      const newTab = window.open(url, '_blank', 'noopener,noreferrer');
+      if (newTab) {
+        if (!isLikelyEmbeddedBrowser()) {
+          showAuthNotice('Finalise la connexion Twitch dans le nouvel onglet, puis reviens ici.');
+        }
+        window.__twitchLoginInProgress = false;
+        if (twitchLogin) {
+          twitchLogin.disabled = false;
+        }
         return;
       }
 
       try {
         window.location.href = url;
       } catch (e) {
+        window.__twitchLoginInProgress = false;
+        if (twitchLogin) {
+          twitchLogin.disabled = false;
+        }
         window.location.assign(url);
       }
+
+      window.setTimeout(() => {
+        window.__twitchLoginInProgress = false;
+        if (twitchLogin) {
+          twitchLogin.disabled = false;
+        }
+      }, 6000);
     }
 
     async function handleOAuthCallbackIfPresent() {
       const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
       const search = new URLSearchParams(window.location.search);
       const hasQueryOAuth = search.has('code') || search.has('error');
-
-      if (relayOAuthCallbackToOpenerIfNeeded(hash, hasQueryOAuth)) {
-        return;
-      }
 
       if (!hash && !hasQueryOAuth) {
         return;
