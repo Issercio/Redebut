@@ -22,9 +22,15 @@
       || queryPayload.has('code')
       || queryPayload.has('error');
 
-    const redirectUrl = hasOAuthPayload
-      ? `./avant-compteur.html${window.location.search}${window.location.hash}`
-      : `./avant-compteur.html?v=${Date.now()}`;
+    if (hasOAuthPayload) {
+      queryPayload.set('oauth', '1');
+      queryPayload.set('v', String(Date.now()));
+    } else {
+      queryPayload.set('v', String(Date.now()));
+    }
+
+    const searchPart = queryPayload.toString() ? `?${queryPayload.toString()}` : '';
+    const redirectUrl = `./avant-compteur.html${searchPart}${window.location.hash}`;
     window.location.replace(redirectUrl);
   </script>
 </head>

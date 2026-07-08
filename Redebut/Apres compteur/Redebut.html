@@ -22,14 +22,18 @@
         const returnPath = flow && flow.returnPath ? flow.returnPath : '../avant-compteur.html';
         const destinationUrl = new URL(returnPath, window.location.origin);
         const hashPart = hasHashOAuth ? `#${hash}` : '';
-        const queryPart = hasQueryOAuth ? window.location.search : '';
-        const destination = `${destinationUrl.origin}${destinationUrl.pathname}${queryPart}${hashPart}`;
+        const queryPart = new URLSearchParams(hasQueryOAuth ? window.location.search : '');
+        queryPart.set('oauth', '1');
+        queryPart.set('v', String(Date.now()));
+        const destination = `${destinationUrl.origin}${destinationUrl.pathname}?${queryPart.toString()}${hashPart}`;
         window.location.replace(destination);
       } catch (e) {
         const fallbackPath = new URL('../avant-compteur.html', window.location.href);
         const hashPart = hasHashOAuth ? `#${hash}` : '';
-        const queryPart = hasQueryOAuth ? window.location.search : '';
-        const fallback = `${fallbackPath.origin}${fallbackPath.pathname}${queryPart}${hashPart}`;
+        const queryPart = new URLSearchParams(hasQueryOAuth ? window.location.search : '');
+        queryPart.set('oauth', '1');
+        queryPart.set('v', String(Date.now()));
+        const fallback = `${fallbackPath.origin}${fallbackPath.pathname}?${queryPart.toString()}${hashPart}`;
         window.location.replace(fallback);
       }
     })();

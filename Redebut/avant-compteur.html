@@ -529,6 +529,7 @@
       '/countdown-config.json'
     ];
     const oauthPendingStorageKey = 'redebut-oauth-pending-v1';
+    const oauthPostCallbackRefreshKey = 'redebut-oauth-post-callback-refresh-v1';
     const countdownStorageKey = 'redebut-countdown-target-date-shared';
     const countdownVersionStorageKey = 'redebut-countdown-reset-version-shared';
     const countdownDurationStorageKey = 'redebut-countdown-duration-ms-shared';
@@ -1237,12 +1238,20 @@
       const hasQueryOAuth = search.has('code') || search.has('error');
 
       if (!hash && !hasQueryOAuth) {
+        try {
+          window.sessionStorage.removeItem(oauthPostCallbackRefreshKey);
+        } catch (e) {
+          // Ignore session storage cleanup errors.
+        }
         return;
       }
+
+      let shouldForceRefresh = false;
 
       if (hash) {
         if (await completeOAuthFromHash(hash)) {
           clearOAuthParamsFromUrl();
+          shouldForceRefresh = true;
         }
       } else if (hasQueryOAuth) {
         // Some OAuth providers can return query params instead of hash.
@@ -1250,6 +1259,23 @@
         showAuthNotice('Connexion en cours, retour OAuth detecte.');
         clearOAuthPending();
         clearOAuthParamsFromUrl();
+        shouldForceRefresh = true;
+      }
+
+      if (shouldForceRefresh) {
+        try {
+          const alreadyRefreshed = window.sessionStorage.getItem(oauthPostCallbackRefreshKey) === '1';
+          if (!alreadyRefreshed) {
+            window.sessionStorage.setItem(oauthPostCallbackRefreshKey, '1');
+            const refreshQuery = new URLSearchParams(window.location.search);
+            refreshQuery.set('oauth', '1');
+            refreshQuery.set('v', String(Date.now()));
+            window.location.replace(`${window.location.pathname}?${refreshQuery.toString()}`);
+            return;
+          }
+        } catch (e) {
+          // If session storage is unavailable, continue without forced refresh.
+        }
       }
 
       try {
