@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Jouer - Pokémon Sort Game</title>
+
+<link rel="stylesheet" href="../style.css">
+
+</head>
+
+
+<body onload="chargerJeu()">
+
+
+
+<div class="background"></div>
+
+
+
+
+
+<audio id="music" autoplay loop>
+
+<source src="../assets/music.mp3" type="audio/mpeg">
+
+</audio>
+
+
+
+
+
+
+
+<div class="container">
+
+
+
+<h1>
+🎮 Pokémon Sort Game
+</h1>
+
+
+
+
+<p>
+
+Classe les Pokémon
+
+<br>
+
+du plus petit au plus grand.
+
+<br><br>
+
+La taille sera révélée après validation.
+
+</p>
+
+
+
+
+
+
+
+<h2>
+🌟 Pokémon à trier
+</h2>
+
+
+
+
+<div id="pokemon-list">
+
+</div>
+
+
+
+
+
+
+
+<h2>
+⬇️ Ton classement
+</h2>
+
+
+
+
+<div id="sort-zone">
+
+Dépose les Pokémon ici
+
+</div>
+
+
+
+
+
+
+
+
+<button onclick="verifier()">
+
+✅ Vérifier
+
+</button>
+
+
+
+
+
+<br><br>
+
+
+
+
+<a href="../index.html" class="menu-return">
+
+🏠 Retour menu
+
+</a>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- ==========================
+     FENÊTRE RESULTAT
+========================== -->
+
+
+
+<div id="result-box" class="result hidden-box">
+
+
+
+<div class="result-content">
+
+
+
+<h2 id="result-title">
+
+</h2>
+
+
+
+
+<p id="result-text">
+
+</p>
+
+
+
+
+
+<button onclick="nouvellePartie()">
+
+🔄 Nouvelle partie
+
+</button>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<script src="../script.js"></script>
+
+
+
+</body>
+
+</html>

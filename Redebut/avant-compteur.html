@@ -451,9 +451,9 @@
   <div id="bgImg" class="bg-img" aria-hidden="true"></div>
   <div class="sakura"></div>
   <div class="card">
-    <h1>Un nouveau chapitre</h1>
-    <p class="intro">Merci pour votre soutien et votre présence.</p>
-    <p class="message">Merci pour votre présence.<br>Un nouveau chapitre s’ouvre avec tout mon amour.</p>
+    <h1><img class="auth-logo" src="https://discord.com/assets/6f3bd79aa93e5260.svg" alt="Fleur" aria-hidden="true" />L'aube d'une nouvelle histoire.</h1>
+    <p class="intro">Chaque petale raconte une histoire.</p>
+    <p class="message">Chaque histoire ouvre un nouveau chemin.</p>
 
     <div class="countdown" aria-label="Compte à rebours">
       <div class="time-box"><strong id="days">00</strong><span>Jours</span></div>
@@ -1274,37 +1274,10 @@
           // Ignore clipboard access failures.
         }
 
-        showAuthNotice('Twitch bloque ce navigateur integre. Ouvre le lien dans Chrome/Edge/Firefox (copie deja prete).');
+        showAuthNotice('Twitch peut bloquer ce navigateur integre. Si besoin, ouvre dans Chrome/Edge/Firefox.');
       }
 
-      const newTab = window.open(url, '_blank', 'noopener,noreferrer');
-      if (newTab) {
-        if (!isLikelyEmbeddedBrowser()) {
-          showAuthNotice('Finalise la connexion Twitch dans le nouvel onglet, puis reviens ici.');
-        }
-        window.__twitchLoginInProgress = false;
-        if (twitchLogin) {
-          twitchLogin.disabled = false;
-        }
-        return;
-      }
-
-      try {
-        window.location.href = url;
-      } catch (e) {
-        window.__twitchLoginInProgress = false;
-        if (twitchLogin) {
-          twitchLogin.disabled = false;
-        }
-        window.location.assign(url);
-      }
-
-      window.setTimeout(() => {
-        window.__twitchLoginInProgress = false;
-        if (twitchLogin) {
-          twitchLogin.disabled = false;
-        }
-      }, 6000);
+      window.location.assign(url);
     }
 
     async function handleOAuthCallbackIfPresent() {

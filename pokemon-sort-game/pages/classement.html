@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+
+<head>
+
+
+<meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<title>Classement - Pokémon Sort Game</title>
+
+
+
+<link rel="stylesheet" href="../style.css">
+
+
+</head>
+
+
+
+
+<body>
+
+
+
+<div class="background"></div>
+
+
+
+
+
+<audio autoplay loop>
+
+<source src="../assets/music.mp3" type="audio/mpeg">
+
+</audio>
+
+
+
+
+
+
+
+<div class="container">
+
+
+
+<h1>
+
+🏆 Classement
+
+</h1>
+
+
+
+
+
+<p>
+
+Ton meilleur score :
+
+</p>
+
+
+
+
+<h2 id="score">
+
+0
+
+</h2>
+
+
+
+
+
+
+
+
+<table>
+
+
+<tr>
+
+<th>
+Joueur
+</th>
+
+
+<th>
+Score
+</th>
+
+
+</tr>
+
+
+
+
+<tr>
+
+
+<td>
+Joueur
+</td>
+
+
+
+<td id="table-score">
+
+0
+
+</td>
+
+
+
+</tr>
+
+
+
+</table>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+<a href="../index.html" class="menu-return">
+
+🏠 Retour menu
+
+</a>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+
+let score =
+
+localStorage.getItem("score") || 0;
+
+
+
+document.getElementById("score")
+.textContent = score;
+
+
+
+document.getElementById("table-score")
+.textContent = score;
+
+
+
+</script>
+
+
+
+
+
+
+</body>
+
+</html>
