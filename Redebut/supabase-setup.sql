@@ -55,3 +55,17 @@ $$;
 
 revoke all on function public.prune_support_messages(integer) from public;
 grant execute on function public.prune_support_messages(integer) to anon;
+
+create or replace function public.clear_support_messages()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.support_messages;
+end;
+$$;
+
+revoke all on function public.clear_support_messages() from public;
+grant execute on function public.clear_support_messages() to anon;

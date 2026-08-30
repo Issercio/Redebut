@@ -686,9 +686,14 @@
         window.localStorage.setItem(countdownDurationStorageKey, String(countdownDurationMs));
         const sharedTargetDate = new Date(config.targetDate);
         const sharedTargetMs = sharedTargetDate.getTime();
+        const configuredMessagesStartMs = config.messagesStartDate
+          ? new Date(config.messagesStartDate).getTime()
+          : NaN;
         const computedRoundStartMs = Number.isFinite(sharedTargetMs) ? (sharedTargetMs - countdownDurationMs) : NaN;
-        if (Number.isFinite(computedRoundStartMs) && computedRoundStartMs > 0) {
-          const nextRoundStartMs = computedRoundStartMs;
+        const nextRoundStartMs = Number.isFinite(configuredMessagesStartMs) && configuredMessagesStartMs > 0
+          ? configuredMessagesStartMs
+          : computedRoundStartMs;
+        if (Number.isFinite(nextRoundStartMs) && nextRoundStartMs > 0) {
           messagesRoundStartMs = nextRoundStartMs;
           window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
         }
@@ -719,6 +724,16 @@
           window.localStorage.setItem(countdownStorageKey, config.targetDate);
           window.localStorage.setItem(countdownVersionStorageKey, countdownResetVersion);
           window.localStorage.setItem(countdownDurationStorageKey, String(countdownDurationMs));
+          if (Number.isFinite(nextRoundStartMs) && nextRoundStartMs > 0) {
+            messagesRoundStartMs = nextRoundStartMs;
+            window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
+          }
+
+          // Ensure old cloud messages do not reappear after a countdown reset.
+          const cloudResetOk = await clearCloudMessagesOnReset();
+          if (!cloudResetOk && hasCloudConfig) {
+            showComposeNotice('Reset cloud indisponible: execute le script SQL Supabase puis redeploie.');
+          }
 
           supportMessages = [];
           cloudDisabledForSession = false;
@@ -1053,6 +1068,34 @@
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
         const isSupabaseMention = /supabase|temps reel|mode local actif|synchro telephone \+ pc/i.test(message || '');
         composeStatus.textContent = isMobile && isSupabaseMention ? '' : message;
+      }
+    }
+
+    async function clearCloudMessagesOnReset() {
+      if (!hasCloudConfig) {
+        return true;
+      }
+
+      const looksLikeJwt = (supabaseConfig.anonKey || '').split('.').length === 3;
+      const headers = {
+        apikey: supabaseConfig.anonKey,
+        'Content-Type': 'application/json'
+      };
+
+      if (looksLikeJwt) {
+        headers.Authorization = `Bearer ${supabaseConfig.anonKey}`;
+      }
+
+      try {
+        const response = await fetch(`${supabaseConfig.url}/rest/v1/rpc/clear_support_messages`, {
+          method: 'POST',
+          headers,
+          body: '{}'
+        });
+
+        return response.ok;
+      } catch (e) {
+        return false;
       }
     }
 
@@ -1417,7 +1460,7 @@
 
         const parsedMessages = JSON.parse(rawMessages);
         const normalizedMessages = (Array.isArray(parsedMessages) ? parsedMessages : []).map((entry) => normalizeSupportMessage(entry));
-        supportMessages = normalizedMessages;
+        supportMessages = filterMessagesForCurrentRound(normalizedMessages);
       } catch (e) {
         supportMessages = [];
       }
@@ -1435,12 +1478,20 @@
         return;
       }
 
+      ensureMessagesRoundStartMs();
+
       let rows = [];
+      const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
+      const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
         let queryBuilder = supabaseClient
           .from(supabaseConfig.table)
           .select('name, provider, text, created_at');
+
+        if (hasRoundStart) {
+          queryBuilder = queryBuilder.gte('created_at', roundStartIso);
+        }
 
         const { data, error } = await queryBuilder
           .order('created_at', { ascending: true })
@@ -1453,11 +1504,14 @@
         rows = Array.isArray(data) ? data : [];
       } else {
         let query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
+        if (hasRoundStart) {
+          query += `&created_at=gte.${encodeURIComponent(roundStartIso)}`;
+        }
         const data = await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}${query}`);
         rows = Array.isArray(data) ? data : [];
       }
 
-      const remoteMessages = rows.map((row) => normalizeSupportMessage(row));
+      const remoteMessages = filterMessagesForCurrentRound(rows.map((row) => normalizeSupportMessage(row)));
 
       const remoteKeys = new Set(remoteMessages.map((entry) => buildMessageSyncKey(entry)));
       const localFallbackWindowMs = 2 * 60 * 1000;
@@ -1473,7 +1527,7 @@
 
       if (!remoteMessages.length && supportMessages.length) {
         // Keep already visible local messages when cloud returns empty unexpectedly.
-        supportMessages = supportMessages.map((entry) => normalizeSupportMessage(entry));
+        supportMessages = filterMessagesForCurrentRound(supportMessages.map((entry) => normalizeSupportMessage(entry)));
         persistSupportMessages();
         renderSupportMessages();
         return;
@@ -1813,6 +1867,7 @@
         const nextMessages = event.newValue ? JSON.parse(event.newValue) : [];
         supportMessages = (Array.isArray(nextMessages) ? nextMessages : [])
           .map((entry) => normalizeSupportMessage(entry));
+        supportMessages = filterMessagesForCurrentRound(supportMessages);
       } catch (e) {
         supportMessages = [];
       }
@@ -1829,6 +1884,7 @@
 
         supportMessages = (Array.isArray(payload.messages) ? payload.messages : [])
           .map((entry) => normalizeSupportMessage(entry));
+        supportMessages = filterMessagesForCurrentRound(supportMessages);
         renderSupportMessages();
       };
     }
@@ -1839,6 +1895,7 @@
         publishMessageBtn.disabled = !isAuthenticated();
       });
     });
+
     textArea.addEventListener('keydown', (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault();
