@@ -1421,7 +1421,13 @@
         return normalized;
       }
 
-      return filterMessagesForCurrentRound(normalized);
+      const filtered = filterMessagesForCurrentRound(normalized);
+      if (!filtered.length && normalized.length) {
+        // Avoid a false empty state when the round boundary is stale or mismatched.
+        return normalized;
+      }
+
+      return filtered;
     }
 
     function normalizeSupportMessage(entry) {
