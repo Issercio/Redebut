@@ -1415,6 +1415,15 @@
       });
     }
 
+    function filterMessagesWhenRoundReady(messages) {
+      const normalized = Array.isArray(messages) ? messages : [];
+      if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
+        return normalized;
+      }
+
+      return filterMessagesForCurrentRound(normalized);
+    }
+
     function normalizeSupportMessage(entry) {
       const rawCreatedAt = entry && (entry.createdAt ?? entry.created_at);
       const createdAtMs = Number(rawCreatedAt);
@@ -1452,11 +1461,6 @@
 
     function loadPersistedSupportMessages() {
       try {
-        if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
-          supportMessages = [];
-          return;
-        }
-
         const rawMessages = window.localStorage.getItem(supportMessagesStorageKey);
         if (!rawMessages) {
           supportMessages = [];
@@ -1465,7 +1469,7 @@
 
         const parsedMessages = JSON.parse(rawMessages);
         const normalizedMessages = (Array.isArray(parsedMessages) ? parsedMessages : []).map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(normalizedMessages);
+        supportMessages = filterMessagesWhenRoundReady(normalizedMessages);
       } catch (e) {
         supportMessages = [];
       }
@@ -1487,11 +1491,6 @@
 
       let rows = [];
       const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
-      if (!hasRoundStart) {
-        supportMessages = [];
-        renderSupportMessages();
-        return;
-      }
       const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
@@ -1521,7 +1520,7 @@
         rows = Array.isArray(data) ? data : [];
       }
 
-      const remoteMessages = filterMessagesForCurrentRound(rows.map((row) => normalizeSupportMessage(row)));
+      const remoteMessages = filterMessagesWhenRoundReady(rows.map((row) => normalizeSupportMessage(row)));
 
       const remoteKeys = new Set(remoteMessages.map((entry) => buildMessageSyncKey(entry)));
       const localFallbackWindowMs = 2 * 60 * 1000;
@@ -1537,7 +1536,7 @@
 
       if (!remoteMessages.length && supportMessages.length) {
         // Keep already visible local messages when cloud returns empty unexpectedly.
-        supportMessages = filterMessagesForCurrentRound(supportMessages.map((entry) => normalizeSupportMessage(entry)));
+        supportMessages = filterMessagesWhenRoundReady(supportMessages.map((entry) => normalizeSupportMessage(entry)));
         persistSupportMessages();
         renderSupportMessages();
         return;
@@ -1877,7 +1876,7 @@
         const nextMessages = event.newValue ? JSON.parse(event.newValue) : [];
         supportMessages = (Array.isArray(nextMessages) ? nextMessages : [])
           .map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(supportMessages);
+        supportMessages = filterMessagesWhenRoundReady(supportMessages);
       } catch (e) {
         supportMessages = [];
       }
@@ -1894,7 +1893,7 @@
 
         supportMessages = (Array.isArray(payload.messages) ? payload.messages : [])
           .map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(supportMessages);
+        supportMessages = filterMessagesWhenRoundReady(supportMessages);
         renderSupportMessages();
       };
     }
