@@ -1335,8 +1335,6 @@
       await consumeOAuthCallbackPayload(hash, hasQueryOAuth);
     }
 
-    supportMessages = [];
-
     function refreshText() {
       const typedMessage = textArea.value.trim();
       const displayName = isAuthenticated() ? authUser.name : 'Compte non connecte';
@@ -1392,6 +1390,21 @@
 
       messagesRoundStartMs = computedRoundStartMs;
       window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
+    }
+
+    function loadPersistedSupportMessages() {
+      try {
+        const rawMessages = window.localStorage.getItem(supportMessagesStorageKey);
+        if (!rawMessages) {
+          supportMessages = [];
+          return;
+        }
+
+        const parsedMessages = JSON.parse(rawMessages);
+        supportMessages = filterMessagesForCurrentRound(Array.isArray(parsedMessages) ? parsedMessages : []);
+      } catch (e) {
+        supportMessages = [];
+      }
     }
 
     function buildMessageSyncKey(entry) {
@@ -1462,6 +1475,14 @@
 
         return !remoteKeys.has(buildMessageSyncKey(entry));
       });
+
+      if (!remoteMessages.length && supportMessages.length) {
+        // Keep already visible local messages when cloud returns empty unexpectedly.
+        supportMessages = filterMessagesForCurrentRound(supportMessages);
+        persistSupportMessages();
+        renderSupportMessages();
+        return;
+      }
 
       supportMessages = remoteMessages
         .concat(preservedRecentLocalMessages)
@@ -1834,6 +1855,7 @@
       // Render core UI immediately so auth buttons are visible even if async setup fails.
       updateAuthUi();
       refreshText();
+      loadPersistedSupportMessages();
       renderSupportMessages();
 
       try {
