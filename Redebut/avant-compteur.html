@@ -1394,6 +1394,13 @@
       window.localStorage.setItem(messagesRoundStartStorageKey, String(messagesRoundStartMs));
     }
 
+    function buildMessageSyncKey(entry) {
+      const name = String((entry && entry.name) || '').trim().toLowerCase();
+      const provider = String((entry && entry.provider) || '').trim().toLowerCase();
+      const text = String((entry && entry.text) || '').trim();
+      return `${name}::${provider}::${text}`;
+    }
+
     async function pullSupportMessagesFromSupabase() {
       if (!isCloudSyncEnabled) {
         return;
@@ -1437,14 +1444,29 @@
         rows = Array.isArray(data) ? data : [];
       }
 
-      supportMessages = rows.map((row) => ({
-            name: row.name || 'Compte',
-            provider: row.provider || 'Compte',
-            text: row.text || '',
-            createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
-          }));
+      const remoteMessages = filterMessagesForCurrentRound(rows.map((row) => ({
+        name: row.name || 'Compte',
+        provider: row.provider || 'Compte',
+        text: row.text || '',
+        createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
+      })));
 
-      supportMessages = filterMessagesForCurrentRound(supportMessages);
+      const remoteKeys = new Set(remoteMessages.map((entry) => buildMessageSyncKey(entry)));
+      const localFallbackWindowMs = 2 * 60 * 1000;
+      const preservedRecentLocalMessages = supportMessages.filter((entry) => {
+        const createdAtMs = Number(entry && entry.createdAt);
+        const isRecent = Number.isFinite(createdAtMs) && (Date.now() - createdAtMs) <= localFallbackWindowMs;
+        if (!isRecent) {
+          return false;
+        }
+
+        return !remoteKeys.has(buildMessageSyncKey(entry));
+      });
+
+      supportMessages = remoteMessages
+        .concat(preservedRecentLocalMessages)
+        .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0))
+        .slice(-maxMessages);
 
       persistSupportMessages();
       renderSupportMessages();
