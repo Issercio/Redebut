@@ -1417,7 +1417,7 @@
 
         const parsedMessages = JSON.parse(rawMessages);
         const normalizedMessages = (Array.isArray(parsedMessages) ? parsedMessages : []).map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(normalizedMessages);
+        supportMessages = normalizedMessages;
       } catch (e) {
         supportMessages = [];
       }
@@ -1435,22 +1435,12 @@
         return;
       }
 
-      ensureMessagesRoundStartMs();
-
       let rows = [];
-      const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
-      if (!hasRoundStart) {
-        renderSupportMessages();
-        return;
-      }
-      const roundStartIso = new Date(messagesRoundStartMs).toISOString();
 
       if (supabaseClient) {
         let queryBuilder = supabaseClient
           .from(supabaseConfig.table)
           .select('name, provider, text, created_at');
-
-        queryBuilder = queryBuilder.gte('created_at', roundStartIso);
 
         const { data, error } = await queryBuilder
           .order('created_at', { ascending: true })
@@ -1463,12 +1453,11 @@
         rows = Array.isArray(data) ? data : [];
       } else {
         let query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
-        query += `&created_at=gte.${encodeURIComponent(roundStartIso)}`;
         const data = await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}${query}`);
         rows = Array.isArray(data) ? data : [];
       }
 
-      const remoteMessages = filterMessagesForCurrentRound(rows.map((row) => normalizeSupportMessage(row)));
+      const remoteMessages = rows.map((row) => normalizeSupportMessage(row));
 
       const remoteKeys = new Set(remoteMessages.map((entry) => buildMessageSyncKey(entry)));
       const localFallbackWindowMs = 2 * 60 * 1000;
@@ -1484,7 +1473,7 @@
 
       if (!remoteMessages.length && supportMessages.length) {
         // Keep already visible local messages when cloud returns empty unexpectedly.
-        supportMessages = filterMessagesForCurrentRound(supportMessages.map((entry) => normalizeSupportMessage(entry)));
+        supportMessages = supportMessages.map((entry) => normalizeSupportMessage(entry));
         persistSupportMessages();
         renderSupportMessages();
         return;
@@ -1824,7 +1813,6 @@
         const nextMessages = event.newValue ? JSON.parse(event.newValue) : [];
         supportMessages = (Array.isArray(nextMessages) ? nextMessages : [])
           .map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(supportMessages);
       } catch (e) {
         supportMessages = [];
       }
@@ -1841,7 +1829,6 @@
 
         supportMessages = (Array.isArray(payload.messages) ? payload.messages : [])
           .map((entry) => normalizeSupportMessage(entry));
-        supportMessages = filterMessagesForCurrentRound(supportMessages);
         renderSupportMessages();
       };
     }
