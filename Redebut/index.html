@@ -5,8 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Redirection...</title>
   <link rel="icon" type="image/jpeg" href="./Apres%20compteur/assets/Kitsune_Favicon.jpg" />
-  <meta http-equiv="refresh" content="0; url=./avant-compteur.html" />
   <script>
+    async function resolveExistingPath(candidates) {
+      for (const path of candidates) {
+        try {
+          const response = await fetch(path, { method: 'HEAD', cache: 'no-store' });
+          if (response.ok) {
+            return path;
+          }
+        } catch (e) {
+          // Try next candidate.
+        }
+      }
+
+      return candidates[0];
+    }
+
     function setEntryFavicon(href) {
       const favicon = document.querySelector("link[rel='icon']");
       if (favicon) {
@@ -30,8 +44,18 @@
     }
 
     const searchPart = queryPayload.toString() ? `?${queryPayload.toString()}` : '';
-    const redirectUrl = `./avant-compteur.html${searchPart}${window.location.hash}`;
-    window.location.replace(redirectUrl);
+
+    (async () => {
+      const targetPath = await resolveExistingPath([
+        './avant-compteur.html',
+        '/avant-compteur.html',
+        './Redebut/avant-compteur.html',
+        '/Redebut/avant-compteur.html'
+      ]);
+
+      const redirectUrl = `${targetPath}${searchPart}${window.location.hash}`;
+      window.location.replace(redirectUrl);
+    })();
   </script>
 </head>
 <body>
