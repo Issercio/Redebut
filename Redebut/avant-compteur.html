@@ -288,6 +288,30 @@
       background: #fff;
     }
 
+    .provider-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
+    .provider-badge-google {
+      background: #eef4ff;
+      border-color: #c7d8ff;
+      color: #1d4ed8 !important;
+    }
+
+    .provider-badge-twitch {
+      background: #f5f1ff;
+      border-color: #ddd6fe;
+      color: #6d28d9 !important;
+    }
+
     .empty-state {
       margin: 0;
       color: #6b7280;
@@ -301,28 +325,39 @@
     .video-frame {
       margin-top: 10px;
       min-height: 220px;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      background: #e9d5ff;
-      display: grid;
-      place-items: center;
+      background: linear-gradient(160deg, #f3e8ff 0%, #fce7f3 100%);
+      display: block;
       color: #6b21a8;
-      padding: 12px;
-      text-align: center;
+      padding: 14px;
+      text-align: left;
+      border: 1px solid #e9d5ff;
+    }
+
+    .video-gallery {
+      display: grid;
+      gap: 14px;
     }
 
     .video-card {
       width: 100%;
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid #ede9fe;
+      box-shadow: 0 10px 24px rgba(91, 33, 182, 0.12);
+    }
+
+    .video-card.is-hidden {
+      display: none;
     }
 
     .video-card p {
       margin: 0 0 8px;
-      font-weight: bold;
-      color: #6d28d9;
+      font-weight: 800;
+      font-size: 17px;
+      color: #5b21b6;
     }
 
     .video-card video {
@@ -477,12 +512,21 @@
 
       <div class="panel video-panel">
         <div id="videoFrame" class="video-frame">
-          <div class="video-card">
-            <p>Mon aventure</p>
-            <video controls preload="metadata" playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture disableremoteplayback oncontextmenu="return false;" ondragstart="return false;">
-              <source src="Apres compteur/Tout%20les%20models.mp4?v=3" type="video/mp4" />
-              Votre navigateur ne prend pas en charge la lecture de vidéos.
-            </video>
+          <div class="video-gallery">
+            <div class="video-card" id="oldModelCard">
+              <p>Ancien modele</p>
+              <video id="oldModelVideo" controls preload="metadata" playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture disableremoteplayback oncontextmenu="return false;" ondragstart="return false;">
+                <source src="Apres compteur/Ancien%20models.mp4?v=1" type="video/mp4" />
+                Votre navigateur ne prend pas en charge la lecture de vidéos.
+              </video>
+            </div>
+            <div class="video-card is-hidden" id="newModelCard">
+              <p>Teaser du nouveau model</p>
+              <video id="newModelVideo" controls preload="metadata" playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture disableremoteplayback oncontextmenu="return false;" ondragstart="return false;">
+                <source src="Apres compteur/Nouveaux%20model.mp4?v=1" type="video/mp4" />
+                Votre navigateur ne prend pas en charge la lecture de vidéos.
+              </video>
+            </div>
           </div>
         </div>
       </div>
@@ -1524,23 +1568,26 @@
     function getProviderLogoInfo(providerRaw) {
       const providerLabel = String(providerRaw || '').trim().toLowerCase();
 
-      if (providerLabel === 'google') {
+      if (providerLabel.includes('google')) {
         return {
           label: 'Google',
-          logoUrl: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'
+          logoUrl: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+          key: 'google'
         };
       }
 
-      if (providerLabel === 'twitch') {
+      if (providerLabel.includes('twitch')) {
         return {
           label: 'Twitch',
-          logoUrl: 'https://www.twitch.tv/favicon.ico'
+          logoUrl: 'https://www.twitch.tv/favicon.ico',
+          key: 'twitch'
         };
       }
 
       return {
         label: providerRaw || 'Compte',
-        logoUrl: ''
+        logoUrl: '',
+        key: 'default'
       };
     }
 
@@ -1585,6 +1632,13 @@
           const authorText = document.createElement('span');
           authorText.textContent = entry.name || 'Compte';
           authorWrap.appendChild(authorText);
+
+          if (providerInfo.key === 'google' || providerInfo.key === 'twitch') {
+            const providerBadge = document.createElement('span');
+            providerBadge.className = `provider-badge provider-badge-${providerInfo.key}`;
+            providerBadge.textContent = providerInfo.label;
+            authorWrap.appendChild(providerBadge);
+          }
 
           const dateNode = document.createElement('span');
           dateNode.textContent = `- ${dateText}`;
@@ -1668,23 +1722,31 @@
             // Do not fail message publishing if pruning is unavailable.
           }
 
+          // Show the message instantly in UI, then refresh from cloud in background.
+          supportMessages.push({
+            name: authUser.name,
+            provider: authUser.provider,
+            text: messageText,
+            createdAt: Date.now()
+          });
+          supportMessages = supportMessages.slice(-maxMessages);
+          persistSupportMessages();
+
           textArea.value = '';
           refreshText();
-          await pullSupportMessagesFromSupabase();
-          showComposeNotice('Message publie et synchronise.');
+          renderSupportMessages();
+
+          try {
+            await pullSupportMessagesFromSupabase();
+            showComposeNotice('Message publie et synchronise.');
+          } catch (e) {
+            showComposeNotice('Message publie. Synchronisation en attente.');
+          }
           return;
         } catch (e) {
           isCloudSyncEnabled = false;
-          showComposeNotice('Cloud indisponible. Message non publie, reessaie.');
-          publishMessageBtn.disabled = !isAuthenticated();
-          return;
+          showComposeNotice('Cloud indisponible. Publication en mode local.');
         }
-      }
-
-      if (hasCloudConfig) {
-        showComposeNotice('Cloud configure: envoi local bloque pour garder Google/Twitch synchronises.');
-        publishMessageBtn.disabled = !isAuthenticated();
-        return;
       }
 
       supportMessages.push({
@@ -1804,6 +1866,23 @@
         }
       });
     });
+
+    const oldModelVideo = document.getElementById('oldModelVideo');
+    const newModelVideo = document.getElementById('newModelVideo');
+    const newModelCard = document.getElementById('newModelCard');
+
+    if (oldModelVideo && newModelVideo && newModelCard) {
+      oldModelVideo.addEventListener('ended', () => {
+        newModelCard.classList.remove('is-hidden');
+        newModelCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const playPromise = newModelVideo.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {
+            // Autoplay may be blocked by browser policies; controls stay available.
+          });
+        }
+      });
+    }
 
     let audioContext;
     let masterGain;
