@@ -79,97 +79,6 @@
       right: 0;
     }
 
-    .hero {
-      margin: 0 0 28px;
-      position: relative;
-      z-index: 2;
-      background: rgba(255,255,255,0.96);
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-      border: 1px solid rgba(124, 58, 237, 0.12);
-    }
-
-    .hero img {
-      width: 100%;
-      height: 440px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .hero-content {
-      padding: 30px 34px 34px;
-    }
-
-    .hero-content h1 {
-      margin: 0 0 10px;
-      color: #7c3aed;
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-    }
-
-    .hero-content p {
-      margin: 0 0 20px;
-      color: #3f4658;
-      line-height: 1.8;
-      font-size: 16px;
-      max-width: 760px;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      display: inline-block;
-      text-decoration: none;
-      padding: 12px 18px;
-      border-radius: 999px;
-      font-weight: 700;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn-donate {
-      background: linear-gradient(135deg, #ec4899, #db2777);
-      color: white;
-      box-shadow: 0 8px 18px rgba(236, 72, 153, 0.2);
-    }
-
-    .btn-video {
-      background: #eef2ff;
-      color: #4338ca;
-      border: 1px solid #c7d2fe;
-    }
-
-    .video-card {
-      margin-top: 20px;
-      padding: 16px;
-      background: #faf7ff;
-      border: 1px solid #ece7ff;
-      border-radius: 16px;
-      scroll-margin-top: 24px;
-    }
-
-    .video-card p {
-      margin: 0 0 10px;
-      color: #6d28d9;
-      font-weight: 700;
-    }
-
-    .video-card video {
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      background: #000;
-    }
-
     .goals-section {
       margin: 0;
       padding: 28px;
@@ -186,6 +95,47 @@
       color: #222;
       font-size: 28px;
       text-align: left;
+    }
+
+    .featured-image {
+      margin: 0 0 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #ece7ff;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+      background: #fff;
+    }
+
+    .featured-image img {
+      width: 100%;
+      max-height: 520px;
+      object-fit: cover;
+      display: block;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: auto;
+    }
+
+    .don-link {
+      display: block;
+      width: min(100%, 640px);
+      margin: 0 auto 24px;
+      text-align: center;
+      text-decoration: none;
+      padding: 18px 28px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+      background: linear-gradient(135deg, #ec4899, #db2777);
+      color: white;
+      box-shadow: 0 8px 18px rgba(236, 72, 153, 0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .don-link:hover {
+      transform: translateY(-1px);
     }
 
     .goal-grid {
@@ -237,13 +187,15 @@
 
     .donation-warning {
       margin: 0 0 20px;
-      padding: 14px 16px;
+      padding: 20px 24px;
       background: #fff;
       border: 1px solid #fbcfe8;
       border-left: 4px solid #ec4899;
       border-radius: 14px;
       color: #4b5563;
-      line-height: 1.7;
+      line-height: 1.8;
+      font-size: 20px;
+      font-weight: 600;
       box-shadow: 0 4px 12px rgba(236, 72, 153, 0.08);
     }
 
@@ -261,26 +213,16 @@
 <body>
   <div class="bg-img" aria-hidden="true"></div>
   <main class="page-shell">
-    <div class="hero">
-      <img src="MiyuYume.png" alt="Miyu Yumé" oncontextmenu="return false;" ondragstart="return false;" />
-      <div class="hero-content">
-        <h1>Un nouveau voyage</h1>
-        <p>Chaque voyage commence par un premier pas...<br>
-Après une longue aventure, un nouveau chapitre s'apprête à s'ouvrir.<br>
-Pour célébrer mes débuts sous un nom ainsi que l'arrivée de mon nouveau modèle, un Donathon aura lieu prochainement ! 🌸</p>
-        <div class="buttons">
-          <a href="https://ko-fi.com/princessekitsune" target="_blank" rel="noopener noreferrer" class="btn btn-donate">Faire un don</a>
-          <a href="video.html" class="btn btn-video">Voir video du nouveau model</a>
-        </div>
-      </div>
-    </div>
-
     <section class="goals-section">
       <h2>Objectifs du donathon</h2>
+      <div class="featured-image">
+        <img src="MiyuYume.png" alt="Miyu Yume" oncontextmenu="return false;" ondragstart="return false;" />
+      </div>
+      <a href="https://ko-fi.com/princessekitsune" target="_blank" rel="noopener noreferrer" class="don-link">Faire un don sur Ko-fi</a>
       <p class="donation-warning">Les dons sont totalement facultatifs. Ne vous mettez surtout pas dans le rouge : votre presence et votre soutien comptent deja enormement pour l'evenement.</p>
       <div class="goal-note">
-        <p>✨ Tous les 50€ votre nom est présent sur l'overlay du live.<br>
-        🎨 Tous les 10€ un petit croquis.</p>
+        <p>🎨 Tous les 10€ un petit croquis.<br>
+        ✨Tous les 50€ votre nom est présent sur l'overlay du live.</p>
       </div>
       <div class="goal-grid">
       <div class="goal-card">
@@ -305,7 +247,7 @@ Pour célébrer mes débuts sous un nom ainsi que l'arrivée de mon nouveau mod�
       </div>
       <div class="goal-card">
         <strong>600€</strong>
-        <p>🤝 Je fais un jeu coop en RP soit avec Issercio soit Lou ou les deux.</p>
+        <p>🤝 Je fais un jeu coop en RP avec Issercio.</p>
       </div>
       <div class="goal-card">
         <strong>700€</strong>
@@ -350,5 +292,26 @@ Pour célébrer mes débuts sous un nom ainsi que l'arrivée de mon nouveau mod�
     </div>
     </section>
   </main>
+
+  <script>
+    // Deter common browser save/download actions on protected images.
+    document.querySelectorAll('.featured-image img').forEach((imageEl) => {
+      imageEl.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+      });
+
+      imageEl.addEventListener('dragstart', (event) => {
+        event.preventDefault();
+      });
+
+    });
+
+    document.addEventListener('keydown', (event) => {
+      const key = (event.key || '').toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && (key === 's' || key === 'u')) {
+        event.preventDefault();
+      }
+    });
+  </script>
 </body>
 </html>
