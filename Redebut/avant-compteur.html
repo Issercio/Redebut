@@ -1065,9 +1065,7 @@
 
     function showComposeNotice(message) {
       if (composeStatus) {
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
-        const isSupabaseMention = /supabase|temps reel|mode local actif|synchro telephone \+ pc/i.test(message || '');
-        composeStatus.textContent = isMobile && isSupabaseMention ? '' : message;
+        composeStatus.textContent = message;
       }
     }
 
@@ -1417,17 +1415,7 @@
 
     function filterMessagesWhenRoundReady(messages) {
       const normalized = Array.isArray(messages) ? messages : [];
-      if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
-        return normalized;
-      }
-
-      const filtered = filterMessagesForCurrentRound(normalized);
-      if (!filtered.length && normalized.length) {
-        // Avoid a false empty state when the round boundary is stale or mismatched.
-        return normalized;
-      }
-
-      return filtered;
+      return normalized;
     }
 
     function normalizeSupportMessage(entry) {
@@ -1496,17 +1484,11 @@
       ensureMessagesRoundStartMs();
 
       let rows = [];
-      const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
-      const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
         let queryBuilder = supabaseClient
           .from(supabaseConfig.table)
           .select('name, provider, text, created_at');
-
-        if (hasRoundStart) {
-          queryBuilder = queryBuilder.gte('created_at', roundStartIso);
-        }
 
         const { data, error } = await queryBuilder
           .order('created_at', { ascending: true })
@@ -1519,9 +1501,6 @@
         rows = Array.isArray(data) ? data : [];
       } else {
         let query = `?select=name,provider,text,created_at&order=created_at.asc&limit=${maxMessages}`;
-        if (hasRoundStart) {
-          query += `&created_at=gte.${encodeURIComponent(roundStartIso)}`;
-        }
         const data = await supabaseRestRequest(`/rest/v1/${supabaseConfig.table}${query}`);
         rows = Array.isArray(data) ? data : [];
       }
