@@ -1452,6 +1452,11 @@
 
     function loadPersistedSupportMessages() {
       try {
+        if (!Number.isFinite(messagesRoundStartMs) || messagesRoundStartMs <= 0) {
+          supportMessages = [];
+          return;
+        }
+
         const rawMessages = window.localStorage.getItem(supportMessagesStorageKey);
         if (!rawMessages) {
           supportMessages = [];
@@ -1482,6 +1487,11 @@
 
       let rows = [];
       const hasRoundStart = Number.isFinite(messagesRoundStartMs) && messagesRoundStartMs > 0;
+      if (!hasRoundStart) {
+        supportMessages = [];
+        renderSupportMessages();
+        return;
+      }
       const roundStartIso = hasRoundStart ? new Date(messagesRoundStartMs).toISOString() : '';
 
       if (supabaseClient) {
@@ -1914,6 +1924,8 @@
 
       try {
         await loadSharedCountdownConfig();
+        loadPersistedSupportMessages();
+        renderSupportMessages();
       } catch (e) {
         // Keep previously known countdown state on transient bootstrap errors.
       }
