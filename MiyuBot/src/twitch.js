@@ -1,6 +1,8 @@
 const tmi = require("tmi.js");
 
-require("dotenv").config();
+require("dotenv").config({
+	override: true
+});
 
 const twitchEnabled =
 	["1", "true", "yes", "on"].includes(
@@ -98,6 +100,49 @@ function getErrorText(error) {
 	return JSON.stringify(error);
 }
 
+async function sendChatMessage(
+	channel,
+	message,
+	allowRetry = true
+) {
+	const targetChannel =
+		String(channel || "").startsWith("#")
+			? String(channel)
+			: `#${twitchChannel}`;
+
+	try {
+		await client.say(
+			targetChannel,
+			message
+		);
+
+		console.log(
+			`[TWITCH] Message envoyé sur ${targetChannel}: ${message}`
+		);
+
+		return true;
+	} catch (error) {
+		console.error(
+			`[TWITCH] Erreur envoi message sur ${targetChannel}:`,
+			getErrorText(error)
+		);
+
+		if (!allowRetry) {
+			return false;
+		}
+
+		console.warn(
+			"[TWITCH] Retry envoi message..."
+		);
+
+		return sendChatMessage(
+			targetChannel,
+			message,
+			false
+		);
+	}
+}
+
 client.on(
 	"connected",
 	(
@@ -143,13 +188,20 @@ client.on(
 		message,
 		self
 	) => {
+		const normalizedMessage =
+			String(message || "")
+				.trim()
+				.toLowerCase();
 
-		if (self) {
+		if (!normalizedMessage.startsWith("!ping")) {
 			return;
 		}
 
-		if (!message.startsWith("!ping")) {
-			return;
+		// Permet de tester !ping même si le message vient du compte bot.
+		if (self) {
+			console.log(
+				"[TWITCH] !ping détecté depuis le compte bot"
+			);
 		}
 
 		const requester =
@@ -157,15 +209,18 @@ client.on(
 			tags.username ||
 			"utilisateur";
 
-		client.say(
+		console.log(
+			`[TWITCH] Commande !ping détectée sur ${channel} par ${requester}`
+		);
+
+		sendChatMessage(
 			channel,
 			`@${requester} Pong ! MiyuBot Twitch est en ligne.`
 		).catch(
 			(error) => {
-
 				console.error(
-					"[TWITCH] Erreur envoi message !ping :",
-					error.message
+					"[TWITCH] Erreur inattendue !ping :",
+					getErrorText(error)
 				);
 			}
 		);

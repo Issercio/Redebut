@@ -1,0 +1,44 @@
+2026-09-06T03:35:04: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 162.159.137.232:443, 162.159.136.232:443, 162.159.128.233:443, 162.159.135.232:443, 162.159.138.232:443, timeout: 10000ms)
+2026-09-06T03:35:04:     at onConnectTimeout (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:237:24)
+2026-09-06T03:35:04:     at Immediate._onImmediate (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:206:11)
+2026-09-06T03:35:04:     at process.processImmediate (node:internal/timers:483:21) {
+2026-09-06T03:35:04:   code: 'UND_ERR_CONNECT_TIMEOUT',
+2026-09-06T03:35:04:   [Symbol(undici.error.UND_ERR)]: true,
+2026-09-06T03:35:04:   [Symbol(undici.error.UND_ERR_CONNECT_TIMEOUT)]: true
+2026-09-06T03:35:04: }
+2026-09-06T03:35:04: ❌ Promise non gérée : ConnectTimeoutError: Connect Timeout Error (attempted addresses: 162.159.137.232:443, 162.159.136.232:443, 162.159.128.233:443, 162.159.135.232:443, 162.159.138.232:443, timeout: 10000ms)
+2026-09-06T03:35:04:     at onConnectTimeout (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:237:24)
+2026-09-06T03:35:04:     at Immediate._onImmediate (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:206:11)
+2026-09-06T03:35:04:     at process.processImmediate (node:internal/timers:483:21) {
+2026-09-06T03:35:04:   code: 'UND_ERR_CONNECT_TIMEOUT',
+2026-09-06T03:35:04:   [Symbol(undici.error.UND_ERR)]: true,
+2026-09-06T03:35:04:   [Symbol(undici.error.UND_ERR_CONNECT_TIMEOUT)]: true
+2026-09-06T03:35:04: }
+2026-09-06T03:35:19: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 162.159.138.232:443, 162.159.137.232:443, 162.159.136.232:443, 162.159.128.233:443, 162.159.135.232:443, timeout: 10000ms)
+2026-09-06T03:35:19:     at onConnectTimeout (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:237:24)
+2026-09-06T03:35:19:     at Immediate._onImmediate (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:206:11)
+2026-09-06T03:35:19:     at process.processImmediate (node:internal/timers:483:21) {
+2026-09-06T03:35:19:   code: 'UND_ERR_CONNECT_TIMEOUT',
+2026-09-06T03:35:19:   [Symbol(undici.error.UND_ERR)]: true,
+2026-09-06T03:35:19:   [Symbol(undici.error.UND_ERR_CONNECT_TIMEOUT)]: true
+2026-09-06T03:35:19: }
+2026-09-06T03:35:19: ❌ Promise non gérée : ConnectTimeoutError: Connect Timeout Error (attempted addresses: 162.159.138.232:443, 162.159.137.232:443, 162.159.136.232:443, 162.159.128.233:443, 162.159.135.232:443, timeout: 10000ms)
+2026-09-06T03:35:19:     at onConnectTimeout (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:237:24)
+2026-09-06T03:35:19:     at Immediate._onImmediate (/root/Redebut/MiyuBot/node_modules/undici/lib/core/connect.js:206:11)
+2026-09-06T03:35:19:     at process.processImmediate (node:internal/timers:483:21) {
+2026-09-06T03:35:19:   code: 'UND_ERR_CONNECT_TIMEOUT',
+2026-09-06T03:35:19:   [Symbol(undici.error.UND_ERR)]: true,
+2026-09-06T03:35:19:   [Symbol(undici.error.UND_ERR_CONNECT_TIMEOUT)]: true
+2026-09-06T03:35:19: }
+2026-09-06T04:04:37: [TWITCH] Déconnecté : Login authentication failed
+2026-09-06T04:04:37: [TWITCH] Échec de connexion : Login authentication failed
+2026-09-06T04:05:05: [TWITCH] Déconnecté : Login authentication failed
+2026-09-06T04:05:05: [TWITCH] Échec de connexion : Login authentication failed
+2026-09-06T04:08:46: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:11:45: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:31:35: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:33:05: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:34:09: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:34:34: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T04:41:47: [TWITCH] Déconnecté : Connection closed.
+2026-09-06T12:14:34: [TWITCH] Déconnecté : 

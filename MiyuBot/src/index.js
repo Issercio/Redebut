@@ -1,6 +1,8 @@
 console.log("🚀 Démarrage de MiyuBot...");
 
-require("dotenv").config();
+require("dotenv").config({
+	override: true
+});
 
 const discordClient = require("./discord");
 const twitchRuntime = require("./twitch");
