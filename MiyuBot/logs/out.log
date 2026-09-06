@@ -1,0 +1,506 @@
+2026-09-06T03:00:55: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:00:55: ◇ injected env (5) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:00:55: ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+2026-09-06T03:00:55: 📦 Commande chargée : antinuke
+2026-09-06T03:00:55: 📦 Commande chargée : cases
+2026-09-06T03:00:55: 📦 Commande chargée : config
+2026-09-06T03:00:55: 📦 Commande chargée : help
+2026-09-06T03:00:55: 📦 Commande chargée : lockdown
+2026-09-06T03:00:55: 📦 Commande chargée : ping
+2026-09-06T03:00:55: 📦 Commande chargée : securitylogs
+2026-09-06T03:00:55: 📦 Commande chargée : setupcheck
+2026-09-06T03:00:55: 📦 Commande chargée : syncmembers
+2026-09-06T03:00:55: 📦 Commande chargée : unlock
+2026-09-06T03:00:55: 📦 Commande chargée : userinfo
+2026-09-06T03:00:55: 📦 Commande chargée : whitelist
+2026-09-06T03:00:55: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:00:55: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:00:55: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:00:55: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:00:56: 🗄️ Base de données prête.
+2026-09-06T03:00:56: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:00:56: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:00:56: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:00:56: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:00:56: 🔒 Système Lockdown activé.
+2026-09-06T03:00:56: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:00:56: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:00:56: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:05:55: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:05:55: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:05:55: ◇ injected env (5) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:05:55: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:05:55: 📦 Commande chargée : antinuke
+2026-09-06T03:05:55: 📦 Commande chargée : cases
+2026-09-06T03:05:55: 📦 Commande chargée : config
+2026-09-06T03:05:55: 📦 Commande chargée : help
+2026-09-06T03:05:55: 📦 Commande chargée : lockdown
+2026-09-06T03:05:55: 📦 Commande chargée : ping
+2026-09-06T03:05:55: 📦 Commande chargée : securitylogs
+2026-09-06T03:05:55: 📦 Commande chargée : setupcheck
+2026-09-06T03:05:55: 📦 Commande chargée : syncmembers
+2026-09-06T03:05:55: 📦 Commande chargée : unlock
+2026-09-06T03:05:55: 📦 Commande chargée : userinfo
+2026-09-06T03:05:55: 📦 Commande chargée : whitelist
+2026-09-06T03:05:55: ◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+2026-09-06T03:05:55: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:05:55: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:05:55: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:05:56: 🗄️ Base de données prête.
+2026-09-06T03:05:56: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:05:56: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:05:56: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:05:56: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:05:56: 🔒 Système Lockdown activé.
+2026-09-06T03:05:56: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:05:56: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:05:56: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:08:18: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:08:18: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:08:18: ◇ injected env (5) from .env // tip: ⌘ suppress logs { quiet: true }
+2026-09-06T03:08:18: ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:08:18: 📦 Commande chargée : antinuke
+2026-09-06T03:08:18: 📦 Commande chargée : cases
+2026-09-06T03:08:18: 📦 Commande chargée : config
+2026-09-06T03:08:18: 📦 Commande chargée : help
+2026-09-06T03:08:18: 📦 Commande chargée : lockdown
+2026-09-06T03:08:18: 📦 Commande chargée : ping
+2026-09-06T03:08:18: 📦 Commande chargée : securitylogs
+2026-09-06T03:08:18: 📦 Commande chargée : setupcheck
+2026-09-06T03:08:18: 📦 Commande chargée : syncmembers
+2026-09-06T03:08:18: 📦 Commande chargée : unlock
+2026-09-06T03:08:18: 📦 Commande chargée : userinfo
+2026-09-06T03:08:18: 📦 Commande chargée : whitelist
+2026-09-06T03:08:18: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:08:18: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:08:18: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:08:18: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:08:19: 🗄️ Base de données prête.
+2026-09-06T03:08:19: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:08:19: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:08:19: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:08:19: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:08:19: 🔒 Système Lockdown activé.
+2026-09-06T03:08:19: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:08:19: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:08:19: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:08:25: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:08:26: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:08:26: ◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:08:26: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:08:26: 📦 Commande chargée : antinuke
+2026-09-06T03:08:26: 📦 Commande chargée : cases
+2026-09-06T03:08:26: 📦 Commande chargée : config
+2026-09-06T03:08:26: 📦 Commande chargée : help
+2026-09-06T03:08:26: 📦 Commande chargée : lockdown
+2026-09-06T03:08:26: 📦 Commande chargée : ping
+2026-09-06T03:08:26: 📦 Commande chargée : securitylogs
+2026-09-06T03:08:26: 📦 Commande chargée : setupcheck
+2026-09-06T03:08:26: 📦 Commande chargée : syncmembers
+2026-09-06T03:08:26: 📦 Commande chargée : unlock
+2026-09-06T03:08:26: 📦 Commande chargée : userinfo
+2026-09-06T03:08:26: 📦 Commande chargée : whitelist
+2026-09-06T03:08:26: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:08:26: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:08:26: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:08:26: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:08:27: 🗄️ Base de données prête.
+2026-09-06T03:08:27: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:08:27: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:08:27: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:08:27: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:08:27: 🔒 Système Lockdown activé.
+2026-09-06T03:08:27: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:08:27: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:08:27: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:09:16: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:09:16: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:09:16: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:09:16: ◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:09:16: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:09:16: 📦 Commande chargée : antinuke
+2026-09-06T03:09:16: 📦 Commande chargée : cases
+2026-09-06T03:09:16: 📦 Commande chargée : config
+2026-09-06T03:09:16: 📦 Commande chargée : help
+2026-09-06T03:09:16: 📦 Commande chargée : lockdown
+2026-09-06T03:09:16: 📦 Commande chargée : ping
+2026-09-06T03:09:16: 📦 Commande chargée : securitylogs
+2026-09-06T03:09:16: 📦 Commande chargée : setupcheck
+2026-09-06T03:09:16: 📦 Commande chargée : syncmembers
+2026-09-06T03:09:16: 📦 Commande chargée : unlock
+2026-09-06T03:09:16: 📦 Commande chargée : userinfo
+2026-09-06T03:09:16: 📦 Commande chargée : whitelist
+2026-09-06T03:09:16: ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+2026-09-06T03:09:16: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:09:16: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:09:16: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:09:17: 🗄️ Base de données prête.
+2026-09-06T03:09:17: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:09:17: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:09:17: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:09:17: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:09:17: 🔒 Système Lockdown activé.
+2026-09-06T03:09:17: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:09:17: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:09:17: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:12:44: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:12:44: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:12:44: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:12:44: ◇ injected env (5) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:12:44: ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:12:44: 📦 Commande chargée : antinuke
+2026-09-06T03:12:44: 📦 Commande chargée : cases
+2026-09-06T03:12:44: 📦 Commande chargée : config
+2026-09-06T03:12:44: 📦 Commande chargée : help
+2026-09-06T03:12:44: 📦 Commande chargée : lockdown
+2026-09-06T03:12:44: 📦 Commande chargée : ping
+2026-09-06T03:12:44: 📦 Commande chargée : securitylogs
+2026-09-06T03:12:44: 📦 Commande chargée : setupcheck
+2026-09-06T03:12:44: 📦 Commande chargée : syncmembers
+2026-09-06T03:12:44: 📦 Commande chargée : unlock
+2026-09-06T03:12:44: 📦 Commande chargée : userinfo
+2026-09-06T03:12:44: 📦 Commande chargée : whitelist
+2026-09-06T03:12:44: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:12:44: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:12:44: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:12:44: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:12:45: 🗄️ Base de données prête.
+2026-09-06T03:12:45: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:12:45: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:12:45: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:12:45: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:12:45: 🔒 Système Lockdown activé.
+2026-09-06T03:12:45: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:12:45: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:12:45: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:12:55: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:12:55: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:12:56: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:12:56: ◇ injected env (5) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:12:56: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:12:56: 📦 Commande chargée : antinuke
+2026-09-06T03:12:56: 📦 Commande chargée : cases
+2026-09-06T03:12:56: 📦 Commande chargée : config
+2026-09-06T03:12:56: 📦 Commande chargée : help
+2026-09-06T03:12:56: 📦 Commande chargée : lockdown
+2026-09-06T03:12:56: 📦 Commande chargée : ping
+2026-09-06T03:12:56: 📦 Commande chargée : securitylogs
+2026-09-06T03:12:56: 📦 Commande chargée : setupcheck
+2026-09-06T03:12:56: 📦 Commande chargée : syncmembers
+2026-09-06T03:12:56: 📦 Commande chargée : unlock
+2026-09-06T03:12:56: 📦 Commande chargée : userinfo
+2026-09-06T03:12:56: 📦 Commande chargée : whitelist
+2026-09-06T03:12:56: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:12:56: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:12:56: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:12:56: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:12:57: 🗄️ Base de données prête.
+2026-09-06T03:12:57: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:12:57: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:12:57: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:12:57: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:12:57: 🔒 Système Lockdown activé.
+2026-09-06T03:12:57: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:12:57: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:12:57: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:14:12: 📝 Changement de pseudo détecté : null → Houi
+2026-09-06T03:16:13: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:16:13: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:16:13: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:16:13: ◇ injected env (5) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:16:13: ◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+2026-09-06T03:16:13: 📦 Commande chargée : antinuke
+2026-09-06T03:16:13: 📦 Commande chargée : cases
+2026-09-06T03:16:13: 📦 Commande chargée : config
+2026-09-06T03:16:13: 📦 Commande chargée : help
+2026-09-06T03:16:13: 📦 Commande chargée : lockdown
+2026-09-06T03:16:13: 📦 Commande chargée : ping
+2026-09-06T03:16:13: 📦 Commande chargée : securitylogs
+2026-09-06T03:16:13: 📦 Commande chargée : setupcheck
+2026-09-06T03:16:13: 📦 Commande chargée : syncmembers
+2026-09-06T03:16:13: 📦 Commande chargée : unlock
+2026-09-06T03:16:13: 📦 Commande chargée : userinfo
+2026-09-06T03:16:13: 📦 Commande chargée : whitelist
+2026-09-06T03:16:13: ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:16:13: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:16:13: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:16:13: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:16:14: 🗄️ Base de données prête.
+2026-09-06T03:16:14: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:16:14: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:16:14: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:16:14: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:16:14: 🔒 Système Lockdown activé.
+2026-09-06T03:16:14: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:16:14: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:16:14: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:17:46: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:17:46: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:17:46: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:17:46: ◇ injected env (5) from .env // tip: ⌘ suppress logs { quiet: true }
+2026-09-06T03:17:46: ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:17:46: 📦 Commande chargée : antinuke
+2026-09-06T03:17:46: 📦 Commande chargée : cases
+2026-09-06T03:17:46: 📦 Commande chargée : config
+2026-09-06T03:17:46: 📦 Commande chargée : help
+2026-09-06T03:17:46: 📦 Commande chargée : lockdown
+2026-09-06T03:17:46: 📦 Commande chargée : ping
+2026-09-06T03:17:46: 📦 Commande chargée : securitylogs
+2026-09-06T03:17:46: 📦 Commande chargée : setupcheck
+2026-09-06T03:17:46: 📦 Commande chargée : syncmembers
+2026-09-06T03:17:46: 📦 Commande chargée : unlock
+2026-09-06T03:17:46: 📦 Commande chargée : userinfo
+2026-09-06T03:17:46: 📦 Commande chargée : whitelist
+2026-09-06T03:17:46: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:17:46: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:17:47: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:17:47: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:17:48: 🗄️ Base de données prête.
+2026-09-06T03:17:48: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:17:48: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:17:48: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:17:48: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:17:48: 🔒 Système Lockdown activé.
+2026-09-06T03:17:48: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:17:48: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:17:48: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:24:26: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:24:26: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:24:27: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:24:27: ◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:24:27: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:24:27: 📦 Commande chargée : antinuke
+2026-09-06T03:24:27: 📦 Commande chargée : cases
+2026-09-06T03:24:27: 📦 Commande chargée : config
+2026-09-06T03:24:27: 📦 Commande chargée : help
+2026-09-06T03:24:27: 📦 Commande chargée : lockdown
+2026-09-06T03:24:27: 📦 Commande chargée : ping
+2026-09-06T03:24:27: 📦 Commande chargée : securitylogs
+2026-09-06T03:24:27: 📦 Commande chargée : setupcheck
+2026-09-06T03:24:27: 📦 Commande chargée : syncmembers
+2026-09-06T03:24:27: 📦 Commande chargée : unlock
+2026-09-06T03:24:27: 📦 Commande chargée : userinfo
+2026-09-06T03:24:27: 📦 Commande chargée : whitelist
+2026-09-06T03:24:27: ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:24:27: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:24:27: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:24:27: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:24:28: 🗄️ Base de données prête.
+2026-09-06T03:24:28: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:24:28: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:24:28: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:24:28: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:24:28: 🔒 Système Lockdown activé.
+2026-09-06T03:24:28: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:24:28: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:24:28: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:24:36: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:24:36: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:24:36: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:24:36: ◇ injected env (5) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+2026-09-06T03:24:36: ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:24:36: 📦 Commande chargée : antinuke
+2026-09-06T03:24:36: 📦 Commande chargée : cases
+2026-09-06T03:24:36: 📦 Commande chargée : config
+2026-09-06T03:24:36: 📦 Commande chargée : help
+2026-09-06T03:24:36: 📦 Commande chargée : lockdown
+2026-09-06T03:24:36: 📦 Commande chargée : ping
+2026-09-06T03:24:36: 📦 Commande chargée : securitylogs
+2026-09-06T03:24:36: 📦 Commande chargée : setupcheck
+2026-09-06T03:24:36: 📦 Commande chargée : syncmembers
+2026-09-06T03:24:36: 📦 Commande chargée : unlock
+2026-09-06T03:24:36: 📦 Commande chargée : userinfo
+2026-09-06T03:24:36: 📦 Commande chargée : whitelist
+2026-09-06T03:24:36: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:24:36: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:24:36: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:24:36: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:24:37: 🗄️ Base de données prête.
+2026-09-06T03:24:37: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:24:37: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:24:37: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:24:37: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:24:37: 🔒 Système Lockdown activé.
+2026-09-06T03:24:37: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:24:37: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:24:37: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:26:54: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:26:54: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:26:55: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:26:55: ◇ injected env (5) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:26:55: ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:26:55: 📦 Commande chargée : antinuke
+2026-09-06T03:26:55: 📦 Commande chargée : cases
+2026-09-06T03:26:55: 📦 Commande chargée : config
+2026-09-06T03:26:55: 📦 Commande chargée : help
+2026-09-06T03:26:55: 📦 Commande chargée : lockdown
+2026-09-06T03:26:55: 📦 Commande chargée : ping
+2026-09-06T03:26:55: 📦 Commande chargée : securitylogs
+2026-09-06T03:26:55: 📦 Commande chargée : setupcheck
+2026-09-06T03:26:55: 📦 Commande chargée : syncmembers
+2026-09-06T03:26:55: 📦 Commande chargée : unlock
+2026-09-06T03:26:55: 📦 Commande chargée : userinfo
+2026-09-06T03:26:55: 📦 Commande chargée : whitelist
+2026-09-06T03:26:55: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:26:55: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:26:55: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:26:55: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:26:56: 🗄️ Base de données prête.
+2026-09-06T03:26:56: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:26:56: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:26:56: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:26:56: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:26:56: 🔒 Système Lockdown activé.
+2026-09-06T03:26:56: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:26:56: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:26:56: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:27:17: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:27:17: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:27:17: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:27:17: ◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:27:17: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:27:17: 📦 Commande chargée : antinuke
+2026-09-06T03:27:17: 📦 Commande chargée : cases
+2026-09-06T03:27:17: 📦 Commande chargée : config
+2026-09-06T03:27:17: 📦 Commande chargée : help
+2026-09-06T03:27:17: 📦 Commande chargée : lockdown
+2026-09-06T03:27:17: 📦 Commande chargée : ping
+2026-09-06T03:27:17: 📦 Commande chargée : securitylogs
+2026-09-06T03:27:17: 📦 Commande chargée : setupcheck
+2026-09-06T03:27:17: 📦 Commande chargée : syncmembers
+2026-09-06T03:27:17: 📦 Commande chargée : unlock
+2026-09-06T03:27:17: 📦 Commande chargée : userinfo
+2026-09-06T03:27:17: 📦 Commande chargée : whitelist
+2026-09-06T03:27:17: ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:27:17: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:27:17: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:27:17: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:27:18: 🗄️ Base de données prête.
+2026-09-06T03:27:18: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:27:18: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:27:18: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:27:18: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:27:18: 🔒 Système Lockdown activé.
+2026-09-06T03:27:18: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:27:18: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:27:18: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:28:18: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:28:18: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:28:18: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:28:18: ◇ injected env (5) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:28:18: ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+2026-09-06T03:28:18: 📦 Commande chargée : antinuke
+2026-09-06T03:28:18: 📦 Commande chargée : cases
+2026-09-06T03:28:18: 📦 Commande chargée : config
+2026-09-06T03:28:18: 📦 Commande chargée : help
+2026-09-06T03:28:18: 📦 Commande chargée : lockdown
+2026-09-06T03:28:18: 📦 Commande chargée : ping
+2026-09-06T03:28:18: 📦 Commande chargée : securitylogs
+2026-09-06T03:28:18: 📦 Commande chargée : setupcheck
+2026-09-06T03:28:18: 📦 Commande chargée : syncmembers
+2026-09-06T03:28:18: 📦 Commande chargée : unlock
+2026-09-06T03:28:18: 📦 Commande chargée : userinfo
+2026-09-06T03:28:18: 📦 Commande chargée : whitelist
+2026-09-06T03:28:18: ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:28:18: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:28:18: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:28:18: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:28:20: 🗄️ Base de données prête.
+2026-09-06T03:28:20: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:28:20: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:28:20: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:28:20: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:28:20: 🔒 Système Lockdown activé.
+2026-09-06T03:28:20: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:28:20: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:28:20: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:28:25: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:28:25: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:28:25: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:28:25: ◇ injected env (5) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+2026-09-06T03:28:26: ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+2026-09-06T03:28:26: 📦 Commande chargée : antinuke
+2026-09-06T03:28:26: 📦 Commande chargée : cases
+2026-09-06T03:28:26: 📦 Commande chargée : config
+2026-09-06T03:28:26: 📦 Commande chargée : help
+2026-09-06T03:28:26: 📦 Commande chargée : lockdown
+2026-09-06T03:28:26: 📦 Commande chargée : ping
+2026-09-06T03:28:26: 📦 Commande chargée : securitylogs
+2026-09-06T03:28:26: 📦 Commande chargée : setupcheck
+2026-09-06T03:28:26: 📦 Commande chargée : syncmembers
+2026-09-06T03:28:26: 📦 Commande chargée : unlock
+2026-09-06T03:28:26: 📦 Commande chargée : userinfo
+2026-09-06T03:28:26: 📦 Commande chargée : whitelist
+2026-09-06T03:28:26: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:28:26: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:28:26: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:28:26: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:28:27: 🗄️ Base de données prête.
+2026-09-06T03:28:27: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:28:27: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:28:27: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:28:27: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:28:27: 🔒 Système Lockdown activé.
+2026-09-06T03:28:27: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:28:27: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:28:27: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:32:48: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:32:48: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:32:48: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:32:48: ◇ injected env (5) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+2026-09-06T03:32:48: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:32:48: 📦 Commande chargée : antinuke
+2026-09-06T03:32:48: 📦 Commande chargée : cases
+2026-09-06T03:32:48: 📦 Commande chargée : config
+2026-09-06T03:32:48: 📦 Commande chargée : help
+2026-09-06T03:32:48: 📦 Commande chargée : lockdown
+2026-09-06T03:32:48: 📦 Commande chargée : ping
+2026-09-06T03:32:48: 📦 Commande chargée : securitylogs
+2026-09-06T03:32:48: 📦 Commande chargée : setupcheck
+2026-09-06T03:32:48: 📦 Commande chargée : syncmembers
+2026-09-06T03:32:48: 📦 Commande chargée : unlock
+2026-09-06T03:32:48: 📦 Commande chargée : userinfo
+2026-09-06T03:32:48: 📦 Commande chargée : whitelist
+2026-09-06T03:32:48: ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+2026-09-06T03:32:48: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:32:48: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:32:48: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:32:50: 🗄️ Base de données prête.
+2026-09-06T03:32:50: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:32:50: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:32:50: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:32:50: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:32:50: 🔒 Système Lockdown activé.
+2026-09-06T03:32:50: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:32:50: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:32:50: 👂 Événement guildMemberUpdate activé.
+2026-09-06T03:32:59: 🛑 Arrêt demandé (SIGINT)...
+2026-09-06T03:32:59: [DISCORD] Déconnexion propre effectuée
+2026-09-06T03:32:59: 🚀 Démarrage de MiyuBot...
+2026-09-06T03:32:59: ◇ injected env (5) from .env // tip: ⌘ enable debugging { debug: true }
+2026-09-06T03:32:59: ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+2026-09-06T03:32:59: 📦 Commande chargée : antinuke
+2026-09-06T03:32:59: 📦 Commande chargée : cases
+2026-09-06T03:32:59: 📦 Commande chargée : config
+2026-09-06T03:32:59: 📦 Commande chargée : help
+2026-09-06T03:32:59: 📦 Commande chargée : lockdown
+2026-09-06T03:32:59: 📦 Commande chargée : ping
+2026-09-06T03:32:59: 📦 Commande chargée : securitylogs
+2026-09-06T03:32:59: 📦 Commande chargée : setupcheck
+2026-09-06T03:32:59: 📦 Commande chargée : syncmembers
+2026-09-06T03:32:59: 📦 Commande chargée : unlock
+2026-09-06T03:32:59: 📦 Commande chargée : userinfo
+2026-09-06T03:32:59: 📦 Commande chargée : whitelist
+2026-09-06T03:32:59: ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+2026-09-06T03:32:59: [TWITCH] Module désactivé (TWITCH_ENABLED=false)
+2026-09-06T03:32:59: 🗄️ Base de données MiyuBot connectée !
+2026-09-06T03:32:59: 📋 Tables MiyuBot vérifiées et prêtes !
+2026-09-06T03:33:02: 🗄️ Base de données prête.
+2026-09-06T03:33:02: 🤖 MiyuBot est connecté à Discord en tant que MiyuBot#7634
+2026-09-06T03:33:02: 👀 Surveillance des utilisateurs activée.
+2026-09-06T03:33:02: 🛡️ Système Anti-Raid activé.
+2026-09-06T03:33:02: 🚨 Système d'incidents de sécurité activé.
+2026-09-06T03:33:02: 🔒 Système Lockdown activé.
+2026-09-06T03:33:02: 📋 Journal de sécurité automatique activé.
+2026-09-06T03:33:02: 👮 Surveillance des Audit Logs activée.
+2026-09-06T03:33:02: 👂 Événement guildMemberUpdate activé.

@@ -1,0 +1,28 @@
+{
+  "name": "miyubot",
+  "version": "1.0.0",
+  "description": "MiyuBot - Discord & Twitch Security Bot",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:discord": "node src/discord.js",
+    "start:twitch": "node src/twitch.js",
+    "dev": "nodemon src/index.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs --only miyubot",
+    "pm2:stop": "pm2 stop miyubot",
+    "pm2:restart": "pm2 restart miyubot",
+    "pm2:logs": "pm2 logs miyubot"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "sqlite3": "^6.0.1",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
